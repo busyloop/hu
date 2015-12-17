@@ -152,7 +152,9 @@ module Hu
             raise ArgumentError, "Unknown application: #{app_name}"
           end
           next unless v['collaborators'].is_a? Array
-          v['collaborators'].flatten!.sort!.each do |collab|
+          v['collaborators'].flatten!
+          v['collaborators'].sort!
+          v['collaborators'].each do |collab|
             unless heroku_state['collaborators'].include? collab
               raise ArgumentError, "Unknown collaborator: #{collab}"
             end
