@@ -24,4 +24,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "optix"
   spec.add_dependency "platform-api"
   spec.add_dependency "powerbar"
+  spec.add_dependency "hashdiff"
 end
