@@ -23,6 +23,6 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "optix"
   spec.add_dependency "platform-api"
-  spec.add_dependency "powerbar", ">= 1.0.13"
+  spec.add_dependency "powerbar", ">= 1.0.14"
   spec.add_dependency "hashdiff"
 end
