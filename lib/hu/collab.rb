@@ -7,6 +7,15 @@ require 'platform-api'
 module Hu
   class Cli < Optix::Cli
     class Collab < Optix::Cli
+      class InvalidOperation < StandardError; end
+      class InvalidPlan < StandardError
+        attr_accessor :invalid_plan
+
+        def initialize(message=nil, invalid_plan=nil)
+          super(message)
+          self.invalid_plan = invalid_plan
+        end
+      end
 
       text "Manage application/collaborator mapping."
       text ""
@@ -15,23 +24,11 @@ module Hu
       text ""
       text "WARNING: If you remove yourself from an application"
       text "         then hu won't be able to see it anymore."
-      text ""
-      text "Please note that hu can only operate on applications and"
-      text "collaborators that it sees. It will stubbornly refuse to"
-      text "create new applications or collaborators."
-      text ""
-      text "Follow this procedure to introduce a new collaborator:"
-      text ""
-      text "1. Create collaborator on heroku (via web or toolbelt)"
-      text "2. Add them to at least one application that you have access to"
-      text ""
-      text "Now the new collaborator will show up in 'export'"
-      text "and may be assigned to applications."
       def collab; end
 
       OP_COLORS = {
         '+' => "\e[0;1;32m",
-        '-' => "\e[0;1;31m",
+        '-' => "\e[0;1;34m",
         '~' => "\e[0;32m",
       }
       desc "Read mapping from stdin and diff to heroku state"
@@ -39,14 +36,26 @@ module Hu
       parent "collab"
       def diff(cmd, opts, argv)
         parsed_state = parse_as_json_or_yaml(STDIN.read)
-        plan(HashDiff.diff(heroku_state['apps'], parsed_state['apps'])).each do |s|
+        show_plan( plan(HashDiff.diff(heroku_state['apps'], parsed_state['apps']), opts) )
+      end
+
+      def show_plan(plan)
+        plan.each do |s|
           color = OP_COLORS[s[:op]]
           msg = ''
+          icon = ' '
           if s[:method].nil?
-            color = "\e[0;41;33;1m"
-            msg = "Can not resolve this."
+            color = "\e[0m"
+            msg = "<-- Can not resolve this (NO-OP)"
+            icon = "⚠️"
+          elsif s[:invalid]
+            color = "\e[0m"
+            icon = "⚠️"
           end
-          STDERR.printf "%s%6s %-30s %-15s %-30s %s\e[0m\n", color, s[:op_name], s[:app_name], s[:role], s[:value], msg
+          STDERR.printf "%1s %s%6s %-30s %-15s %-30s %s\e[0m\n", icon, color, s[:op_name], s[:app_name], s[:role], s[:value], msg
+          if s[:invalid]
+            STDERR.puts "\e[31;1m         Error: #{s[:invalid]}\e[0m\n\n"
+          end
         end
       end
 
@@ -60,31 +69,46 @@ module Hu
 
       desc "Read mapping from stdin and push to heroku"
       text "Read mapping from stdin and push to heroku"
+      opt :allow_create, "Create new collaborators on heroku", :short => 'c'
+      opt :silent_create, "Suppress email invitation when creating collaborators"
       parent "collab"
       def import(cmd, opts, argv)
         parsed_state = parse_as_json_or_yaml(STDIN.read)
-        plan(HashDiff.diff(heroku_state['apps'], parsed_state['apps'])).each do |s|
-          color = OP_COLORS[s[:op]]
-          msg = ''
-          icon = ' '
-          eol = "\e[100D"
-          if s[:method].nil?
-            color = "\e[0;41;33;1m"
-            msg = "Skipped."
-            icon = "\e[0;31;1m\u2718\e[0m" # X
-            eol = "\n"
-          end
-          STDERR.printf "%s %s%6s %-30s %-15s %-30s %s\e[0m%s", icon, color, s[:op_name], s[:app_name], s[:role], s[:value], msg, eol
-          next if s[:method].nil?
-          begin
-            self.send(s[:method], s)
-            STDERR.puts "\e[0;32;1m\u2713\e[0m\n" # check
-          rescue => e
-            STDERR.puts "\e[0;31;1m\u2718\e[0m\n" # X
-            puts e.inspect
-            puts e.backtrace
-            exit 1
-          end
+        validators = {
+          :op_add_collaborators => Proc.new { |op|
+            unless heroku_state['collaborators'].include? op[:value] or opts[:allow_create]
+              raise InvalidOperation, "Use -c to allow creation of new collaborator '#{op[:value]}'"
+            end
+          }
+        }
+        begin
+          plan(HashDiff.diff(heroku_state['apps'], parsed_state['apps']), opts, validators).each do |s|
+            color = OP_COLORS[s[:op]]
+            msg = ''
+            icon = ' '
+            eol = "\e[1G"
+            if s[:method].nil?
+              color = "\e[0;41;33;1m"
+              msg = "Skipped."
+              icon = "\e[0;31;1m\u2718\e[0m" # X
+              eol = "\n"
+            end
+            STDERR.printf "%s %s%6s %-30s %-15s %-30s %s\e[0m%s", icon, color, s[:op_name], s[:app_name], s[:role], s[:value], msg, eol
+            next if s[:method].nil?
+            begin
+              self.send(s[:method], s)
+              STDERR.puts "\e[0;32;1m\u2713\e[0m\n" # check
+            rescue => e
+              STDERR.puts "\e[0;31;1m\u2718\e[0m\n" # X
+              puts e.inspect
+              puts e.backtrace
+              exit 1
+            end
+          end # /plan()
+        rescue InvalidPlan => e
+          STDERR.puts "\e[0;31;1m#{e}:\e[0m\n\n"
+          show_plan(e.invalid_plan)
+          exit 1
         end
       end
 
@@ -93,8 +117,9 @@ module Hu
         '-' => 'remove',
         '~' => 'change',
       }
-      def plan(diff)
+      def plan(diff, env={}, validators={})
         plan = []
+        last_error = nil
         diff.each do |op, target, lval, rval|
           value = rval || lval
           app_name, role = target.split('.')
@@ -102,20 +127,30 @@ module Hu
           role = role.split('[')[0] unless role.nil?
           op_name = OP_MAP[op]
           method_name = "op_#{op_name}_#{role}".to_sym
-          plan << {
+          operation = {
             app_name: app_name,
             op: op,
             op_name: op_name,
             method: self.respond_to?(method_name) ? method_name : nil,
             value: value,
             role: role,
+            env: env,
           }
+          if validators.include? method_name
+            begin
+              validators[method_name].call(operation)
+            rescue InvalidOperation => e
+              last_error = operation[:invalid] = e
+            end
+          end
+          plan << operation
         end
+        raise InvalidPlan.new("Plan did not pass validation", plan) unless last_error.nil?
         plan
       end
 
       def op_add_collaborators(args)
-        h.collaborator.create(args[:app_name], :user => args[:value])
+        h.collaborator.create(args[:app_name], :user => args[:value], :silent => args[:env][:silent_create])
       end
 
       def op_remove_collaborators(args)
@@ -154,11 +189,6 @@ module Hu
           next unless v['collaborators'].is_a? Array
           v['collaborators'].flatten!
           v['collaborators'].sort!
-          v['collaborators'].each do |collab|
-            unless heroku_state['collaborators'].include? collab
-              raise ArgumentError, "Unknown collaborator: #{collab}"
-            end
-          end
         end
         parsed
       end
