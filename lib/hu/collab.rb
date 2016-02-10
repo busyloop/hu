@@ -198,20 +198,26 @@ module Hu
         all_collaborators = Set.new
         data = { 'apps' => {} }
         app_names = h.app.list.map{|e| e['name']}
+        threads = []
         app_names.each_with_index do |app_name,i|
-          pb :msg => app_name, :total => app_names.length, :done => i+1
-          d = data['apps'][app_name] = { 'collaborators' => [] }
-          h.collaborator.list(app_name).map{|e|
-            case e['role']
-            when 'owner'
-              d['owner'] = e['user']['email']
-            when nil
-              d['collaborators'] << e['user']['email']
-            else
-              raise RuntimeError, "Unknown collaborator role: #{e['role']}"
-            end
-            all_collaborators << e['user']['email']
-          }
+          threads << Thread.new do
+            d = data['apps'][app_name] = { 'collaborators' => [] }
+            h.collaborator.list(app_name).map{|e|
+              case e['role']
+              when 'owner'
+                d['owner'] = e['user']['email']
+              when nil
+                d['collaborators'] << e['user']['email']
+              else
+                raise RuntimeError, "Unknown collaborator role: #{e['role']}"
+              end
+              all_collaborators << e['user']['email']
+            }
+          end
+        end
+        threads.each_with_index do |t, i|
+          t.join
+          pb :msg => app_names[i], :total => app_names.length, :done => i+1
         end
         pb :wipe
         data['collaborators'] = all_collaborators.to_a.sort
