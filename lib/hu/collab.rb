@@ -22,6 +22,10 @@ module Hu
       text "Start by exporting the current mapping,"
       text "edit to taste, then diff and import."
       text ""
+      text "The environment variable HU_IGNORE_APPS"
+      text "may contain space delimited glob(7) patterns"
+      text "of apps to be ignored."
+      text ""
       text "WARNING: If you remove yourself from an application"
       text "         then hu won't be able to see it anymore."
       def collab; end
@@ -182,6 +186,7 @@ module Hu
         unless parsed.include? 'apps'
           raise ArgumentError, "Malformed input, key 'apps' not found."
         end
+        parsed['apps'].reject!{ |e| ignored_app?(e) }
         parsed['apps'].each do |app_name, v|
           unless heroku_state['apps'].include? app_name
             raise ArgumentError, "Unknown application: #{app_name}"
@@ -193,11 +198,18 @@ module Hu
         parsed
       end
 
+      def ignored_app?(app_name)
+        ENV.fetch('HU_IGNORE_APPS','').split(' ').each do |p|
+          return true if File.fnmatch(p, app_name)
+        end
+        false
+      end
+
       def heroku_state(force_refresh=false)
         return @heroku_state unless force_refresh or @heroku_state.nil?
         all_collaborators = Set.new
         data = { 'apps' => {} }
-        app_names = h.app.list.map{|e| e['name']}
+        app_names = h.app.list.map{|e| e['name']}.reject{ |e| ignored_app?(e) }
         threads = []
         app_names.each_with_index do |app_name,i|
           threads << Thread.new do
