@@ -66,7 +66,7 @@ module Hu
       desc "Print current mapping to stdout"
       text "Print current mapping to stdout"
       opt :format, "yaml|json", :default => 'yaml'
-      parent "collab", "Application collaborators"
+      parent "collab", "Manage application collaborators"
       def export(cmd, opts, argv)
         puts heroku_state.send("to_#{opts[:format]}".to_sym)
       end

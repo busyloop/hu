@@ -16,7 +16,7 @@ module Hu
         text ""
         text "\e[1mWARNING: Environment variable 'HEROKU_API_KEY' must be set.\e[0m"
       end
-      opt :quiet, "Don't show progress bar", :default => false
+      opt :quiet, "Quiet mode (no progress output)", :default => false
       opt :version, "Print version and exit", :short => :none
       trigger :version do
         puts "Hu v#{Hu::VERSION}"
