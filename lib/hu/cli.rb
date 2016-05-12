@@ -4,6 +4,7 @@ require 'powerbar'
 require 'yaml'
 require 'platform-api'
 
+require 'hu/common'
 require 'hu/collab'
 require 'hu/deploy'
 

@@ -25,4 +25,9 @@ Gem::Specification.new do |spec|
   spec.add_dependency "platform-api"
   spec.add_dependency "powerbar", ">= 1.0.16"
   spec.add_dependency "hashdiff"
+  spec.add_dependency "version_sorter"
+  spec.add_dependency "versionomy"
+  spec.add_dependency "tty-prompt"
+  spec.add_dependency "rainbow"
+  spec.add_dependency "netrc"
 end
