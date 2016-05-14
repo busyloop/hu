@@ -2,6 +2,7 @@ require 'powerbar'
 require 'yaml'
 require 'hashdiff'
 require 'set'
+require 'netrc'
 require 'platform-api'
 
 module Hu
@@ -28,6 +29,16 @@ module Hu
       text ""
       text "WARNING: If you remove yourself from an application"
       text "         then hu won't be able to see it anymore."
+      if Hu::API_TOKEN.nil?
+        text ""
+        text "\e[1mWARNING: Environment variable 'HEROKU_API_KEY' must be set.\e[0m"
+      end
+      filter do
+        if Hu::API_TOKEN.nil?
+          STDERR.puts "\e[0;31;1mERROR: Environment variable 'HEROKU_API_KEY' must be set.\e[0m"
+          exit 1
+        end
+      end
       def collab; end
 
       OP_COLORS = {
@@ -237,7 +248,7 @@ module Hu
       end
 
       def h
-        @h ||= PlatformAPI.connect_oauth(Hu::Cli::API_TOKEN)
+        @h ||= PlatformAPI.connect_oauth(Hu::API_TOKEN)
       end
 
       def pb(show_opts)
