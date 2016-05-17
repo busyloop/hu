@@ -17,6 +17,7 @@ module Hu
   class Cli < Optix::Cli
     class Deploy < Optix::Cli
       @@shutting_down = false
+      @@spinner = nil
 
       text "Interactive deployment."
       desc "Interactive deployment"
@@ -32,14 +33,25 @@ module Hu
       end
 
       def deploy(cmd, opts, argv)
-        trap('INT') { shutdown; safe_abort }
+        trap('INT') { shutdown; safe_abort; exit 1 }
         at_exit {
           if 130 == $!.status
             shutdown
             puts
             safe_abort
+            exit $!.status
           end
         }
+
+        unless File.exists? '.git'
+          puts
+          puts "You need to be inside the working directory of the app that you wish to deploy.".color(:red)
+          puts
+          safe_abort
+          print TTY::Cursor.prev_line
+          exit 1
+        end
+
         push_url = get_heroku_git_remote
 
         wc_update = Thread.new { update_working_copy }
@@ -151,8 +163,7 @@ module Hu
               puts
               anykey
             when :abort_ask
-              delete_branch("release/#{release_tag}")
-              puts
+              puts if delete_branch("release/#{release_tag}")
               exit 0
             when :retag
               if delete_branch("release/#{release_tag}")
@@ -449,6 +460,7 @@ module Hu
           existing_branch = branches.find {|e| e.start_with? 'release/'}
           branch_already_exists = !existing_branch.nil?
           release_tag = existing_branch[8..-1] if keep_existing && branch_already_exists
+
           if branch_already_exists && !keep_existing
             choice = prompt.expand("The branch '"+"release/#{release_tag}".color(:red)+"' already exists. What shall we do?",
                                                           {default: 0}) do |q|
@@ -475,6 +487,7 @@ module Hu
               release_tag = develop_tag
             else
               start_release(release_tag)
+              puts
             end
           end
 
@@ -566,7 +579,7 @@ module Hu
       end
 
       def safe_abort
-        @@spinner.stop
+        @@spinner&.stop
         printf "\e[0m\e[?25l"
         printf '(ヘ･_･)ヘ┳━┳'
         sleep 0.5
@@ -583,7 +596,6 @@ module Hu
         printf "\e[17D                 "
         printf "\e[?25h"
         puts
-        exit 1
       end
     end
   end
