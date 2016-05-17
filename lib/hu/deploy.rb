@@ -98,9 +98,11 @@ module Hu
           if release_branch_exists
             puts "\nThis release will be "+release_tag.color(:red).bright
             unless highest_version == 'v0.0.0'
-              changelog=`git log --pretty=format:" - %s" #{highest_version}..HEAD` unless highest_version == 'v0.0.0'
-              puts "\nChanges since "+highest_version.bright+":"
-              puts changelog
+              changelog=`git log --pretty=format:" - %s" #{highest_version}..HEAD 2>/dev/null` unless highest_version == 'v0.0.0'
+              unless changelog.empty?
+                puts "\nChanges since "+highest_version.bright+":"
+                puts changelog
+              end
             end
             puts
           else
