@@ -531,6 +531,9 @@ module Hu
 
         # Promote staging to production
         heroku pipelines:promote -r heroku
+
+        # Push develop to origin
+        git push origin develop
         EOS
       end
 
@@ -550,9 +553,6 @@ module Hu
         # Merge master back into develop
         git checkout develop
         git merge master
-
-        # Push develop to origin
-        git push origin develop
         EOS
       end
 
