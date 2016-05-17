@@ -119,7 +119,9 @@ module Hu
             end
             if release_branch_exists
               menu.choice "Delete release/#{release_tag} and start new release from develop", :retag
-              menu.choice "Finish release (merge, tag and final stage)", :finish_release
+              if git_revisions[:release] == git_revisions[stag_app_name]
+                menu.choice "Finish release (merge, tag and final stage)", :finish_release
+              end
             elsif git_revisions[prod_app_name] != git_revisions[stag_app_name]
               menu.choice "DEPLOY (promote #{stag_app_name} to #{prod_app_name})", :DEPLOY
             end
