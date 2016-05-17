@@ -94,7 +94,11 @@ module Hu
         unbusy
 
         highest_version = find_highest_version_tag
-        likely_next_version = Versionomy.parse(highest_version).bump(:tiny).to_s
+        tiny_bump = Versionomy.parse(highest_version).bump(:tiny).to_s
+        minor_bump = Versionomy.parse(highest_version).bump(:minor).to_s
+        major_bump = Versionomy.parse(highest_version).bump(:major).to_s
+        likely_next_version = tiny_bump
+
         release_tag, branch_already_exists = prompt_for_release_tag(likely_next_version, likely_next_version, true)
 
         prompt = TTY::Prompt.new
@@ -127,10 +131,21 @@ module Hu
             menu.choice "Refresh", :refresh
             menu.choice "Quit", :abort_ask
             unless git_revisions[:release] == git_revisions[stag_app_name] or !release_branch_exists
-              menu.choice "Push   release/#{release_tag} to #{stag_app_name}", :push_to_staging
+              menu.choice "Push release/#{release_tag} to #{stag_app_name}", :push_to_staging
             end
             if release_branch_exists
-              menu.choice "Delete release/#{release_tag} and start new release from develop", :retag
+              unless release_tag == tiny_bump
+                menu.choice "Change to PATCH release (bugfix only)     : #{highest_version} -> #{tiny_bump}", :bump_tiny
+              end
+
+              unless release_tag == minor_bump
+                menu.choice "Change to MINOR release (new features)    : #{highest_version} -> #{minor_bump}", :bump_minor
+              end
+
+              unless release_tag == major_bump
+                menu.choice "Change to MAJOR release (breaking changes): #{highest_version} -> #{major_bump}", :bump_major
+              end
+
               if git_revisions[:release] == git_revisions[stag_app_name]
                 menu.choice "Finish release (merge, tag and final stage)", :finish_release
               end
@@ -165,9 +180,17 @@ module Hu
             when :abort_ask
               puts if delete_branch("release/#{release_tag}")
               exit 0
-            when :retag
+            when :bump_tiny
               if delete_branch("release/#{release_tag}")
-                release_tag, branch_already_exists = prompt_for_release_tag(likely_next_version)
+                release_tag, branch_already_exists = prompt_for_release_tag(tiny_bump, tiny_bump)
+              end
+            when :bump_minor
+              if delete_branch("release/#{release_tag}")
+                release_tag, branch_already_exists = prompt_for_release_tag(minor_bump, minor_bump)
+              end
+            when :bump_major
+              if delete_branch("release/#{release_tag}")
+                release_tag, branch_already_exists = prompt_for_release_tag(major_bump, major_bump)
               end
           end
         end
