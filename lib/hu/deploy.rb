@@ -59,7 +59,7 @@ module Hu
 
         if @git.config['branch.master.remote'] != 'origin'
           puts
-          puts "FATAL: Remote of branch 'master' does not point to 'origin'.".color(:red)
+          puts "ERROR: Remote of branch 'master' does not point to 'origin'.".color(:red)
           puts
           puts "       Sorry, we need an origin here. We really do."
           puts
@@ -68,14 +68,24 @@ module Hu
 
         if @git.config['gitflow.branch.master'].nil?
           puts
-          puts "FATAL: This repository doesn't seem to be git-flow enabled.".color(:red)
+          puts "ERROR: This repository doesn't seem to be git-flow enabled.".color(:red)
           puts
           puts "       Please run 'git flow init'."
           puts
           exit 1
         end
 
-        git_flow_version_prefix = @git.config['gitflow.prefix.versiontag']
+        unless @git.config['gitflow.prefix.versiontag'].nil? ||
+               @git.config['gitflow.prefix.versiontag'].empty?
+          puts
+          puts "ERROR: git-flow version prefix configured.".color(:red)
+          puts
+          puts "       Please use this command to remove the prefix:"
+          puts
+          puts "       git config --add gitflow.prefix.versiontag ''".bright
+          puts
+          exit 1
+        end
 
         push_url = get_heroku_git_remote
 
@@ -85,7 +95,7 @@ module Hu
 
         if app.nil?
           puts
-          puts "FATAL: Found no heroku app for git remote #{push_url}".color(:red)
+          puts "ERROR: Found no heroku app for git remote #{push_url}".color(:red)
           puts "       Are you logged into the right heroku account?".color(:red)
           puts
           puts "       Please run 'git remote rm heroku'. Then run 'hu deploy' again to select a new remote."
@@ -97,7 +107,7 @@ module Hu
 
         if app['id'] != stag_app_id
           puts
-          puts "FATAL: The git remote 'heroku' points to app '#{app['name']}'".color(:red)
+          puts "ERROR: The git remote 'heroku' points to app '#{app['name']}'".color(:red)
           puts "       which is not in stage 'staging'".color(:red)+
                " of pipeline '#{pipeline_name}'.".color(:red)
           puts
@@ -119,9 +129,34 @@ module Hu
         unbusy
 
         highest_version = find_highest_version_tag
-        tiny_bump = Versionomy.parse(highest_version).bump(:tiny).to_s
-        minor_bump = Versionomy.parse(highest_version).bump(:minor).to_s
-        major_bump = Versionomy.parse(highest_version).bump(:major).to_s
+        begin
+          highest_versionomy = Versionomy.parse(highest_version)
+        rescue
+          highest_versionomy = Versionomy.parse('v0.0.0')
+        end
+
+        all_tags = Set.new(@git.references.to_a("refs/tags/*").collect{|e| e.target.name})
+
+        tiny_bump  = highest_versionomy.dup
+        minor_bump = highest_versionomy.dup
+        major_bump = highest_versionomy.dup
+
+        loop do
+          tiny_bump  = tiny_bump.bump(:tiny)
+          break unless all_tags.include? tiny_bump.to_s
+        end
+        loop do
+          minor_bump = minor_bump.bump(:minor)
+          break unless all_tags.include? minor_bump.to_s
+        end
+        loop do
+          major_bump = major_bump.bump(:major)
+          break unless all_tags.include? tiny_bump.to_s
+        end
+        tiny_bump  = tiny_bump.to_s
+        minor_bump = minor_bump.to_s
+        major_bump = major_bump.to_s
+
         likely_next_version = tiny_bump
 
         release_tag, branch_already_exists = prompt_for_release_tag(likely_next_version, likely_next_version, true)
@@ -139,7 +174,11 @@ module Hu
           if release_branch_exists
             puts "\nThis release will be "+release_tag.color(:red).bright
             unless highest_version == 'v0.0.0'
-              changelog=`git log --pretty=format:" - %s" #{highest_version}..HEAD 2>/dev/null` unless highest_version == 'v0.0.0'
+              env = {
+                'PREVIOUS_TAG' => highest_version,
+                'RELEASE_TAG'  => release_tag
+              }
+              changelog=create_changelog(env) unless highest_version == 'v0.0.0'
               unless changelog.empty?
                 puts "\nChanges since "+highest_version.bright+":"
                 puts changelog
@@ -586,6 +625,15 @@ module Hu
         # Abort failed merge
         git merge --abort
         EOS
+      end
+
+      def create_changelog(env)
+        if File.executable? '.hu/hooks/changelog'
+          env.each { |k,v| ENV[k] = v }
+          `.hu/hooks/changelog`
+        else
+          `git log --pretty=format:" - %s" #{env['PREVIOUS_TAG']}..HEAD 2>/dev/null`
+        end
       end
 
       def shutdown
