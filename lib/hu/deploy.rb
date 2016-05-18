@@ -230,7 +230,11 @@ module Hu
               tf.write "#{release_tag}\n#{changelog}"
               tf.close
               ENV['EDITOR'] = "cp #{tf.path}"
-              unless 0 == finish_release(release_tag)
+              env = {
+                'PREVIOUS_TAG' => highest_version,
+                'RELEASE_TAG'  => release_tag
+              }
+              unless 0 == finish_release(release_tag, env)
                 abort_merge
                 puts "*** ERROR!  Push did not complete. *** ".color(:red)
               end
@@ -239,7 +243,6 @@ module Hu
             when :push_to_staging
               push_command = "git push #{push_url} release/#{release_tag}:master -f"
               `#{push_command}`
-              puts
               anykey
             when :abort_ask
               puts if delete_branch("release/#{release_tag}")
@@ -601,7 +604,15 @@ module Hu
         EOS
       end
 
-      def finish_release(release_tag)
+      def finish_release(release_tag, env)
+        env.each { |k,v| ENV[k] = v }
+        if File.executable? '.hu/hooks/pre_release'
+          run_each <<-EOS.strip_heredoc
+          # Run pre-release hook
+          .hu/hooks/pre_release
+          EOS
+        end
+
         run_each <<-EOS.strip_heredoc
         :return
         # Finish release
