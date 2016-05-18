@@ -627,7 +627,7 @@ module Hu
 
         # Merge master back into develop
         git checkout develop
-        git merge master
+        git rebase master
         EOS
       end
 
