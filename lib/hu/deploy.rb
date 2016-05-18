@@ -12,6 +12,7 @@ require 'chronic_duration'
 require 'tempfile'
 require 'thread_safe'
 require 'io/console'
+require 'rugged'
 
 module Hu
   class Cli < Optix::Cli
@@ -35,22 +36,46 @@ module Hu
       def deploy(cmd, opts, argv)
         trap('INT') { shutdown; safe_abort; exit 1 }
         at_exit {
-          if 130 == $!.status
+          if $!.class == SystemExit && 130 == $!.status
             shutdown
             puts
             safe_abort
-            exit $!.status
           end
         }
 
-        unless File.exists? '.git'
+        begin
+          @git = Rugged::Repository.discover('.')
+        rescue Rugged::RepositoryError => e
           puts
-          puts "You need to be inside the working directory of the app that you wish to deploy.".color(:red)
+          puts "Git error: #{e}".color(:red)
+          puts "You need to be inside the working copy of the app that you wish to deploy.".color(:red)
           puts
           safe_abort
           print TTY::Cursor.prev_line
           exit 1
         end
+
+        Dir.chdir(@git.workdir)
+
+        if @git.config['branch.master.remote'] != 'origin'
+          puts
+          puts "FATAL: Remote of branch 'master' does not point to 'origin'.".color(:red)
+          puts
+          puts "       Sorry, we need an origin here. We really do."
+          puts
+          exit 1
+        end
+
+        if @git.config['gitflow.branch.master'].nil?
+          puts
+          puts "FATAL: This repository doesn't seem to be git-flow enabled.".color(:red)
+          puts
+          puts "       Please run 'git flow init'."
+          puts
+          exit 1
+        end
+
+        git_flow_version_prefix = @git.config['gitflow.prefix.versiontag']
 
         push_url = get_heroku_git_remote
 
@@ -577,7 +602,7 @@ module Hu
       end
 
       def unbusy
-        @@spinner.stop
+        @@spinner&.stop
         printf "\e[?25h"
       end
 
@@ -589,7 +614,7 @@ module Hu
 
       def anykey
         puts TTY::Cursor.hide
-        print "--- Press any key to continue ---".color(:cyan).inverse
+        print "--- Press any key ---".color(:cyan)
         STDIN.getch
         print TTY::Cursor.clear_line + TTY::Cursor.show
       end
