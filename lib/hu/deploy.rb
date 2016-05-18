@@ -304,7 +304,8 @@ module Hu
               # heroku uses wrong timezone offset in the slug api... /facepalm
               #table_row[3] = ChronicDuration.output(Time.now.utc - Time.parse(slug_info['updated_at']), :units => 1)
 
-              table_row[3] = ChronicDuration.output(Time.now.utc - Time.parse(release_info['updated_at']), :units => 1)
+              delta = Time.now.utc - Time.parse(release_info['updated_at'])
+              table_row[3] = delta < 60 ? 'less than a minute' : ChronicDuration.output(delta, :units => 1)
               table_row[3] += " ago"
               #table_row[3] += "\n\e[30;1m" + slug_info['updated_at']
 
