@@ -190,6 +190,33 @@ module Hu
             puts
           end
 
+          unless git_revisions[:release] == git_revisions[stag_app_name] or !release_branch_exists
+            puts "Phase 1/3: The local release branch "+"release/#{release_tag}".bright+" was created."
+            puts "           Nothing else has happened so far. Push this branch to"
+            puts "           "+"#{stag_app_name}".bright+" to begin the deploy procedure."
+            puts
+          end
+
+          if release_branch_exists && git_revisions[:release] == git_revisions[stag_app_name]
+            puts "Phase 2/3: Your local "+"release/#{release_tag}".bright+" (formerly "+"develop".bright+") is now live at #{stag_app_name}."
+            puts "           Please test thoroughly: "+"#{app['web_url']}".bright
+            puts "           If everything looks good, you may proceed and finish the release."
+            puts "           If there are problems: Quit, delete the release branch and start fixing."
+            puts
+          elsif git_revisions[prod_app_name] != git_revisions[stag_app_name]
+            puts "Phase 3/3: HEADS UP. This is your last chance to avoid owing everyone a beer."
+            puts "           The final version of "+"release/#{release_tag}".bright+" is now staged."
+            puts
+            puts "           Test here: "+"#{app['web_url']}".bright
+            sleep 1
+            puts
+            puts "           This is the exact version that will be promoted to production."
+            puts "           From here you are on your own. Good luck #{`whoami`.chomp}!"
+            puts
+          end
+
+
+
           choice = prompt.select("Choose your destiny") do |menu|
             menu.enum '.'
             menu.choice "Refresh", :refresh
