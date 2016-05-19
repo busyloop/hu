@@ -204,7 +204,7 @@ module Hu
             puts "           If there are problems: Quit, delete the release branch and start fixing."
             puts
           elsif git_revisions[prod_app_name] != git_revisions[stag_app_name]
-            puts "Phase 3/3: HEADS UP. This is your last chance to avoid owing everyone a beer."
+            puts "Phase 3/3: HEADS UP. This is the last chance to detect problems."
             puts "           The final version of "+"release/#{release_tag}".bright+" is now staged."
             puts
             puts "           Test here: "+"#{app['web_url']}".bright
