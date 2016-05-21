@@ -1,10 +1,21 @@
-# Heroku Utility
+# Heroku Utility [![Dependency Status](https://gemnasium.com/badges/github.com/busyloop/hu.svg)](https://gemnasium.com/github.com/busyloop/hu) [![Gem Version](https://badge.fury.io/rb/hu.svg)](https://badge.fury.io/rb/hu)
 
-Small utility to augment the toolbelt.
+A small utility to augment the toolbelt.
+
+## Features
+
+* Bulk collabator management (export/import as YAML or JSON)
+
+* Opinionated, guided application deployment (via [git-flow](https://github.com/nvie/gitflow) and [pipelines](https://devcenter.heroku.com/articles/pipelines))
 
 ## Installation
 
     $ gem install hu
+
+## Usage
+
+Please run `hu --help` and follow the on-screen instructions.
+
 
 ## Contributing
 
@@ -18,7 +29,7 @@ Patches are welcome, especially bugfixes.
 
 ## License
 
-Copyright (C) 2015, moe@busyloop.net
+Copyright (C) 2016, moe@busyloop.net
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
