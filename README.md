@@ -4,7 +4,7 @@ A small utility to augment the toolbelt.
 
 ## Features
 
-* Bulk collabator management (export/import as YAML or JSON)
+* Bulk collaborator management (export/import as YAML or JSON)
 
 * Opinionated, guided application deployment (via [git-flow](https://github.com/nvie/gitflow) and [pipelines](https://devcenter.heroku.com/articles/pipelines))
 
