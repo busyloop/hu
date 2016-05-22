@@ -135,7 +135,7 @@ module Hu
           highest_versionomy = Versionomy.parse('v0.0.0')
         end
 
-        all_tags = Set.new(@git.references.to_a("refs/tags/*").collect{|e| e.target.name})
+        all_tags = Set.new(@git.references.to_a("refs/tags/*").collect{|e| e.name[10..-1]})
 
         tiny_bump  = highest_versionomy.dup
         minor_bump = highest_versionomy.dup
@@ -456,7 +456,7 @@ module Hu
           exit status.exitstatus
         end
 
-        versions = VersionSorter.sort(output.lines.map(&:chomp))
+        versions = VersionSorter.sort(output.lines.map(&:chomp).map {|e| e[0].downcase == 'v' ? e.downcase : "v#{e.downcase}" })
         latest = versions[-1] || 'v0.0.0'
         latest = "v#{latest}" unless latest[0] == "v"
         latest
@@ -558,7 +558,6 @@ module Hu
             try_version = nil
           else
             show_existing_git_tags
-            #puts
             release_tag = prompt.ask("Please enter a tag for this release", default: propose_version)
             begin
               unless release_tag[0] == 'v'
