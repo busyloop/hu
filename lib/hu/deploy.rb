@@ -13,6 +13,10 @@ require 'tempfile'
 require 'thread_safe'
 require 'io/console'
 require 'rugged'
+require 'pty'
+require 'thread'
+require 'paint'
+require 'lolcat/lol'
 
 module Hu
   class Cli < Optix::Cli
@@ -263,13 +267,23 @@ module Hu
               }
               unless 0 == finish_release(release_tag, env)
                 abort_merge
-                puts "*** ERROR!  Push did not complete. *** ".color(:red)
+                puts "*** ERROR! Could not finish release *** ".color(:red)
+                puts
+                puts "This usually means a merge conflict or"
+                puts "something similarly complicated has occured."
+                puts
+                puts "Please bring the universe into a state"
+                puts "where the above command succeeds, then try again."
+                puts
+                exit 1
               end
               ENV['EDITOR'] = old_editor
               anykey
             when :push_to_staging
-              push_command = "git push #{push_url} release/#{release_tag}:master -f"
-              `#{push_command}`
+              run_each <<-EOS.strip_heredoc
+              :stream
+              git push #{push_url} release/#{release_tag}:master -f
+              EOS
               anykey
             when :abort_ask
               puts if delete_branch("release/#{release_tag}")
@@ -292,7 +306,7 @@ module Hu
 
       def show_pipeline_status(pipeline_name, stag_app_name, prod_app_name, release_tag, clear=true)
         table = TTY::Table.new header: %w{location commit tag app_last_modified app_last_modified_by dynos# state}
-        busy '♪♫♬  elevator music ', :pulse
+        busy 'loading', :classic
         ts = []
         tpl_row = ['?', '', '', '', '', '', '']
         revs = ThreadSafe::Hash.new
@@ -415,34 +429,84 @@ module Hu
         @h ||= PlatformAPI.connect_oauth(Hu::API_TOKEN)
       end
 
-      def run_each(script)
-        quiet = false
-        failfast = true
-        spinner = true
+      def run_each(script, opts={})
+        opts = {
+          quiet: false,
+          failfast: true,
+          spinner: true,
+          stream: false
+        }.merge(opts)
+
+        @spinlock ||= Mutex.new # :P
         script.lines.each_with_index do |line, i|
           line.chomp!
           case line[0]
             when '#'
-              puts "\n" + line.bright unless quiet
+              puts "\n" + line.bright unless opts[:quiet]
             when ':'
-              quiet = true     if line == ':quiet'
-              failfast = false if line == ':return'
-              spinner  = false if line == ':nospinner'
+              opts[:quiet]    = true  if line == ':quiet'
+              opts[:failfast] = false if line == ':return'
+              opts[:spinner]  = false if line == ':nospinner'
+              if line == ':stream'
+                opts[:stream] = true
+                opts[:quiet] = false
+              end
           end
           next if line.empty? or ['#', ':'].include? line[0]
-          busy line if spinner
-          output, status = Open3.capture2e(line)
-          unbusy if spinner
-          color = (status.exitstatus == 0) ? :green : :red
-          if status.exitstatus != 0 or !quiet
-            puts "\n> ".color(color) + line.color(:black).bright
-            puts output
+
+          status = nil
+          if opts[:stream]
+            puts "\n> ".color(:green) + line.color(:black).bright
+            PTY.spawn(line) do |r,w,pid|
+              @tspin ||= Thread.new do
+                @minispin_last_char = Time.now
+                i = 0
+                loop do
+                  break if @minispin_last_char == :end
+                  if 0.23 > Time.now - @minispin_last_char
+                    sleep 0.1
+                    next
+                  end
+                  @spinlock.synchronize {
+                    print "\e[?25l"
+                    print Paint[' ', '#000', Lol.rainbow(1, i/3.0)]
+                    sleep 0.12
+                    print 8.chr
+                    print ' '
+                    print 8.chr
+                    i += 1
+                    print "\e[?25h"
+                  }
+                end
+              end
+
+              while !r.eof?
+                c = r.getc
+                @spinlock.synchronize {
+                  print c
+                  @minispin_last_char = Time.now
+                }
+              end
+              pid, status = Process.wait2(pid)
+              @minispin_last_char = :end
+              @tspin.join
+              @tspin = nil
+              #status = PTY.check(pid)
+            end
+          else
+            busy line if opts[:spinner]
+            output, status = Open3.capture2e(line)
+            unbusy if opts[:spinner]
+            color = (status.exitstatus == 0) ? :green : :red
+            if status.exitstatus != 0 or !opts[:quiet]
+              puts "\n> ".color(color) + line.color(:black).bright
+              puts output
+            end
           end
           if status.exitstatus != 0
-            shutdown if failfast
-            puts "Error on line #{i}: #{line}"
-            puts "Exit code: #{status.exitstatus}"
-            exit status.exitstatus if failfast
+            shutdown if opts[:failfast]
+            puts "Error, exit #{status.exitstatus}: #{line} (L#{i})".color(:red).bright
+            exit status.exitstatus if opts[:failfast]
             return status.exitstatus
           end
         end
@@ -621,6 +685,7 @@ module Hu
 
       def promote_to_production
         run_each <<-EOS.strip_heredoc
+        :stream
         :return
 
         # Promote staging to production
@@ -641,6 +706,7 @@ module Hu
         end
 
         run_each <<-EOS.strip_heredoc
+        :stream
         :return
         # Finish release
         git flow release finish #{release_tag}
@@ -679,10 +745,10 @@ module Hu
         unbusy
       end
 
-      def busy(msg='', format=:classic)
+      def busy(msg='', format=:classic, clear=true)
         return if @@shutting_down
         format ||= TTY::Formats::FORMATS.keys.sample
-        options = {format: format, hide_cursor: true, error_mark: "\e[31;1m✖\e[0m", success_mark: "\e[32;1m✔\e[0m", clear: true}
+        options = {format: format, hide_cursor: true, error_mark: "\e[31;1m✖\e[0m", success_mark: "\e[32;1m✔\e[0m", clear: clear}
         @@spinner = TTY::Spinner.new("\e[0;1m#{msg}#{msg.empty? ? '' : ' '}\e[0m\e[32;1m:spinner\e[0m", options)
         @@spinner.start
       end
@@ -713,7 +779,7 @@ module Hu
       end
 
       def safe_abort
-        @@spinner&.stop
+        @spinner&.stop
         printf "\e[0m\e[?25l"
         printf '(ヘ･_･)ヘ┳━┳'
         sleep 0.5
