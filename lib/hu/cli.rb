@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'hu/version'
 require 'optix'
 require 'powerbar'
@@ -11,18 +12,17 @@ require 'hu/deploy'
 
 module Hu
   class Cli < Optix::Cli
-    Optix::command do
+    Optix.command do
       text "Hu v#{Hu::VERSION} - Heroku Utility"
-      opt :quiet, "Quiet mode (no progress output)", :default => false
-      opt :version, "Print version and exit", :short => :none
+      opt :quiet, 'Quiet mode (no progress output)', default: false
+      opt :version, 'Print version and exit', short: :none
       trigger :version do
         puts "Hu v#{Hu::VERSION}"
       end
-      filter do |cmd, opts, argv|
+      filter do |_cmd, opts, _argv|
         $quiet = opts[:quiet]
         $quiet = true unless STDOUT.isatty
       end
     end
   end
 end
-
