@@ -203,7 +203,7 @@ module Hu
             puts "           If everything looks good, you may proceed and finish the release."
             puts "           If there are problems: Quit, delete the release branch and start fixing."
             puts
-          elsif git_revisions[prod_app_name] != git_revisions[stag_app_name]
+          elsif git_revisions[prod_app_name] != git_revisions[stag_app_name] and !release_branch_exists and git_revisions[:release] != git_revisions[stag_app_name]
             puts "Phase 3/3: HEADS UP. This is the last chance to detect problems."
             puts "           The final version of "+"release/#{release_tag}".bright+" is now staged."
             puts
