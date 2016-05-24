@@ -39,4 +39,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'chronic_duration'
   spec.add_dependency 'thread_safe'
   spec.add_dependency 'rugged'
+  spec.add_dependency 'paint'
 end
