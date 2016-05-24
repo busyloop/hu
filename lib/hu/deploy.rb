@@ -255,10 +255,11 @@ module Hu
             anykey
           when :finish_release
             old_editor = ENV['EDITOR']
+            old_git_editor = ENV['GIT_EDITOR']
             tf = Tempfile.new('hu-tag')
             tf.write "#{release_tag}\n#{changelog}"
             tf.close
-            ENV['EDITOR'] = "cp #{tf.path}"
+            ENV['EDITOR'] = ENV['GIT_EDITOR'] = "cp #{tf.path}"
             env = {
               'PREVIOUS_TAG' => highest_version,
               'RELEASE_TAG'  => release_tag
@@ -275,7 +276,7 @@ module Hu
               puts
               exit 1
             end
-            ENV['EDITOR'] = old_editor
+            ENV['EDITOR'] = ENV['GIT_EDITOR'] = old_editor
             anykey
           when :push_to_staging
             run_each <<-EOS.strip_heredoc
