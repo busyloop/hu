@@ -262,7 +262,8 @@ module Hu
             ENV['EDITOR'] = ENV['GIT_EDITOR'] = "cp #{tf.path}"
             env = {
               'PREVIOUS_TAG' => highest_version,
-              'RELEASE_TAG'  => release_tag
+              'RELEASE_TAG'  => release_tag,
+              'GIT_MERGE_AUTOEDIT' => 'no'
             }
             unless 0 == finish_release(release_tag, env)
               abort_merge
