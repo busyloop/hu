@@ -340,7 +340,7 @@ module Hu
               revs[app_name] = table_row[1] = slug_info['commit'][0..5]
 
               table_row[2] = `git tag --points-at #{slug_info['commit']} 2>/dev/null`
-              table_row[2] = '' if $CHILD_STATUS != 0
+              table_row[2] = '' unless $?.success?
 
               # heroku uses wrong timezone offset in the slug api... /facepalm
               # table_row[3] = ChronicDuration.output(Time.now.utc - Time.parse(slug_info['updated_at']), :units => 1)
