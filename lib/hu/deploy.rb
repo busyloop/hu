@@ -536,7 +536,7 @@ module Hu
         run_each <<-EOS.strip_heredoc
           :quiet
           # Delete branch #{branch_name}
-          git co develop
+          git checkout develop
           git branch -D #{branch_name}
         EOS
         puts "Branch #{branch_name} deleted.".color(:red)
@@ -547,7 +547,7 @@ module Hu
         run_each <<-EOS.strip_heredoc
           :quiet
           # Checkout branch #{branch_name}
-          git co #{branch_name}
+          git checkout #{branch_name}
         EOS
       end
 
