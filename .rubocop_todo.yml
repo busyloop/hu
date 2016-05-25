@@ -5,7 +5,7 @@ Metrics/AbcSize:
 # Offense count: 2
 # Configuration parameters: CountComments.
 Metrics/ClassLength:
-  Max: 651
+  Max: 657
 
 # Offense count: 6
 Metrics/CyclomaticComplexity:
@@ -20,7 +20,7 @@ Metrics/LineLength:
 # Offense count: 14
 # Configuration parameters: CountComments.
 Metrics/MethodLength:
-  Max: 230
+  Max: 232
 
 # Offense count: 4
 Metrics/PerceivedComplexity:
@@ -54,3 +54,10 @@ Style/GlobalVars:
 Style/Semicolon:
   Exclude:
     - 'lib/hu/deploy.rb'
+
+# Offense count: 1
+# Cop supports --auto-correct.
+# Configuration parameters: EnforcedStyle, SupportedStyles.
+# SupportedStyles: use_perl_names, use_english_names
+Style/SpecialGlobalVars:
+  Enabled: false
