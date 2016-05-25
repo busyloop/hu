@@ -480,13 +480,19 @@ module Hu
                 end
               end
 
-              until r.eof?
-                c = r.getc
-                @spinlock.synchronize do
-                  print c
-                  @minispin_last_char = Time.now
+              begin
+                until r.eof?
+                  c = r.getc
+                  @spinlock.synchronize do
+                    print c
+                    @minispin_last_char = Time.now
+                  end
                 end
+              rescue => e
+                puts "Oops: #{e}".color(:red)
+                sleep 5
               end
+
               _pid, status = Process.wait2(pid)
               @minispin_last_char = :end
               @tspin.join
