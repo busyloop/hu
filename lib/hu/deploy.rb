@@ -75,7 +75,7 @@ module Hu
           puts
           puts "ERROR: This repository doesn't seem to be git-flow enabled.".color(:red)
           puts
-          puts "       Please run 'git flow init'."
+          puts "       Please run 'git flow init -d'"
           puts
           exit 1
         end
