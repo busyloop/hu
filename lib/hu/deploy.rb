@@ -277,7 +277,8 @@ module Hu
               puts
               exit 1
             end
-            ENV['EDITOR'] = ENV['GIT_EDITOR'] = old_editor
+            ENV['EDITOR'] = old_editor
+            ENV['GIT_EDITOR'] = old_git_editor
             anykey
           when :push_to_staging
             run_each <<-EOS.strip_heredoc
@@ -488,9 +489,10 @@ module Hu
                     @minispin_last_char = Time.now
                   end
                 end
-              rescue => e
-                puts "Oops: #{e}".color(:red)
-                sleep 5
+              rescue Errno::EIO
+                # Linux raises EIO on EOF, cf.
+                # https://github.com/ruby/ruby/blob/57fb2199059cb55b632d093c2e64c8a3c60acfbb/ext/pty/pty.c#L519
+                nil
               end
 
               _pid, status = Process.wait2(pid)
