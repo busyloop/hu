@@ -270,10 +270,11 @@ module Hu
               puts '*** ERROR! Could not finish release *** '.color(:red)
               puts
               puts 'This usually means a merge conflict or'
-              puts 'something similarly complicated has occured.'
+              puts 'something equally annoying has occured.'
               puts
               puts 'Please bring the universe into a state'
-              puts 'where the above command succeeds, then try again.'
+              puts 'where the above sequence of commands can'
+              puts 'succeed. Then try again.'
               puts
               exit 1
             end
