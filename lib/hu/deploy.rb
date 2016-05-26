@@ -527,7 +527,9 @@ module Hu
           exit status.exitstatus
         end
 
-        versions = VersionSorter.sort(output.lines.map(&:chomp).map { |e| e[0].casecmp('v').zero? ? e.downcase : "v#{e.downcase}" })
+        versions = output.lines.map(&:chomp).reject { |e| Versionomy.parse(e) rescue true; false }
+        versions = versions.map { |e| e[0].casecmp('v').zero? ? e.downcase : "v#{e.downcase}" }
+        versions = VersionSorter.sort(versions)
         latest = versions[-1] || 'v0.0.0'
         latest = "v#{latest}" unless latest[0] == 'v'
         latest
