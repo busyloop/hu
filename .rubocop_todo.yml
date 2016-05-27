@@ -1,26 +1,31 @@
-# Offense count: 13
+# Offense count: 1
+Lint/HandleExceptions:
+  Exclude:
+    - 'lib/hu/telemetry.rb'
+
+# Offense count: 14
 Metrics/AbcSize:
-  Max: 276
+  Max: 298
 
 # Offense count: 2
 # Configuration parameters: CountComments.
 Metrics/ClassLength:
-  Max: 657
+  Max: 694
 
 # Offense count: 6
 Metrics/CyclomaticComplexity:
   Max: 45
 
-# Offense count: 83
+# Offense count: 86
 # Configuration parameters: AllowHeredoc, AllowURI, URISchemes.
 # URISchemes: http, https
 Metrics/LineLength:
   Max: 176
 
-# Offense count: 14
+# Offense count: 16
 # Configuration parameters: CountComments.
 Metrics/MethodLength:
-  Max: 232
+  Max: 254
 
 # Offense count: 4
 Metrics/PerceivedComplexity:
@@ -31,7 +36,7 @@ Style/ClassVars:
   Exclude:
     - 'lib/hu/deploy.rb'
 
-# Offense count: 5
+# Offense count: 6
 Style/Documentation:
   Exclude:
     - 'spec/**/*'
@@ -40,6 +45,7 @@ Style/Documentation:
     - 'lib/hu/collab.rb'
     - 'lib/hu/common.rb'
     - 'lib/hu/deploy.rb'
+    - 'lib/hu/telemetry.rb'
 
 # Offense count: 3
 # Configuration parameters: AllowedVariables.
