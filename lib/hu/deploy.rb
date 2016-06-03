@@ -488,7 +488,7 @@ module Hu
                 i = 0
                 loop do
                   break if @minispin_last_char == :end
-                  if 0.23 > Time.now - @minispin_last_char or @minispin_disable
+                  if 0.23 > Time.now - @minispin_last_char || @minispin_disable
                     sleep 0.1
                     next
                   end
