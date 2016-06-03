@@ -329,7 +329,7 @@ module Hu
 
       def show_pipeline_status(pipeline_name, stag_app_name, prod_app_name, release_tag, clear = true)
         table = TTY::Table.new header: %w(location commit tag app_last_modified app_last_modified_by dynos# state)
-        busy 'loading', :classic
+        busy '', :classic
         ts = []
         tpl_row = ['?', '', '', '', '', '', '']
         revs = ThreadSafe::Hash.new
@@ -484,10 +484,11 @@ module Hu
             PTY.spawn(line) do |r, _w, pid|
               @tspin ||= Thread.new do
                 @minispin_last_char = Time.now
+                @minispin_disable = false
                 i = 0
                 loop do
                   break if @minispin_last_char == :end
-                  if 0.23 > Time.now - @minispin_last_char
+                  if 0.23 > Time.now - @minispin_last_char or @minispin_disable
                     sleep 0.1
                     next
                   end
@@ -510,6 +511,10 @@ module Hu
                   @spinlock.synchronize do
                     print c
                     @minispin_last_char = Time.now
+                    c = c.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '') # barf.
+                    # hold on when we are (likely) inside an escape sequence
+                    @minispin_disable = true  if c == 27
+                    @minispin_disable = false if c =~ /[A-Za-z]/
                   end
                 end
               rescue Errno::EIO
