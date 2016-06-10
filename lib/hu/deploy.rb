@@ -18,10 +18,12 @@ require 'pty'
 require 'thread'
 require 'paint'
 require 'lolcat/lol'
+require 'io/console'
 
 module Hu
   class Cli < Optix::Cli
     class Deploy < Optix::Cli
+      $stdout.sync
       @@shutting_down = false
       @@spinner = nil
 
@@ -503,40 +505,42 @@ module Hu
           status = nil
           if opts[:stream]
             puts "\n> ".color(:green) + line.color(:black).bright
-            PTY.spawn(line) do |r, _w, pid|
-              @tspin ||= Thread.new do
-                @minispin_last_char = Time.now
-                @minispin_disable = false
-                i = 0
-                loop do
-                  break if @minispin_last_char == :end
-                  if 0.23 > Time.now - @minispin_last_char || @minispin_disable
-                    sleep 0.1
-                    next
-                  end
-                  @spinlock.synchronize do
-                    print "\e[?25l"
-                    print Paint[' ', '#000', Lol.rainbow(1, i / 3.0)]
-                    sleep 0.12
-                    print 8.chr
-                    print ' '
-                    print 8.chr
-                    i += 1
-                    print "\e[?25h"
-                  end
+            rows, cols = STDIN.winsize
+            @minispin_disable = false
+            @minispin_last_char_at = Time.now
+            @tspin ||= Thread.new do
+              i = 0
+              loop do
+                break if @minispin_last_char_at == :end
+                if 0.23 > Time.now - @minispin_last_char_at || @minispin_disable
+                  sleep 0.1
+                  next
+                end
+                @spinlock.synchronize do
+                  next if @minispin_disable
+                  print "\e[?25l"
+                  print Paint[' ', '#000', Lol.rainbow(1, i / 3.0)]
+                  sleep 0.12
+                  print 8.chr
+                  print ' '
+                  print 8.chr
+                  i += 1
+                  print "\e[?25h"
                 end
               end
+            end
 
+            PTY.spawn("stty rows #{rows} cols #{cols}; "+line) do |r, _w, pid|
               begin
                 until r.eof?
                   c = r.getc
                   @spinlock.synchronize do
                     print c
-                    @minispin_last_char = Time.now
-                    c = c.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '') # barf.
+                    @minispin_last_char_at = Time.now
+                    c = c.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: "\e") # barf.
                     # hold on when we are (likely) inside an escape sequence
-                    @minispin_disable = true  if c == 27
-                    @minispin_disable = false if c =~ /[A-Za-z]/
+                    @minispin_disable = true  if c.ord == 27 || c.ord < 9
+                    @minispin_disable = false if c =~ /[A-Za-z]/ || [13,10].include?(c.ord)
                   end
                 end
               rescue Errno::EIO
@@ -546,7 +550,7 @@ module Hu
               end
 
               _pid, status = Process.wait2(pid)
-              @minispin_last_char = :end
+              @minispin_last_char_at = :end
               @tspin.join
               @tspin = nil
               # status = PTY.check(pid)
