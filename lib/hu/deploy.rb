@@ -23,6 +23,9 @@ require 'io/console'
 module Hu
   class Cli < Optix::Cli
     class Deploy < Optix::Cli
+      ::TTY::Formats::FORMATS[:hu] = { frames: '🌑🌒🌓🌔🌕🌖🌗🌘'.chars, interval: 10 }
+      ::TTY::Formats::FORMATS[:huroku] = { frames: '⣾⣽⣻⢿⡿⣟⣯⣷'.chars, interval: 10 }
+
       $stdout.sync
       @@shutting_down = false
       @@spinner = nil
@@ -331,7 +334,7 @@ module Hu
 
       def show_pipeline_status(pipeline_name, stag_app_name, prod_app_name, release_tag, clear = true)
         table = TTY::Table.new header: %w(location commit tag app_last_modified app_last_modified_by dynos# state)
-        busy '', :classic
+        busy 'loading', :huroku
         ts = []
         workers = []
         tpl_row = ['?', '', '', '', '', '', '']
