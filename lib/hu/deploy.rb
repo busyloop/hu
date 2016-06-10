@@ -801,7 +801,8 @@ module Hu
 
       def abort_merge
         run_each <<-EOS.strip_heredoc
-        # Abort failed merge
+        :return
+        # Abort failed merge (if any)
         git merge --abort
         EOS
         Hu::Tm.t(:abort_merge, cmd: 'deploy')
