@@ -210,14 +210,14 @@ module Hu
           end
 
           if release_branch_exists && git_revisions[:release] == git_revisions[stag_app_name]
-            puts 'Phase 2/3: Your local ' + "release/#{release_tag}".bright + ' (formerly ' + 'develop'.bright + ") is now live at #{stag_app_name}."
-            puts '           Please test thoroughly: ' + (app['web_url']).to_s.bright
+            puts 'Phase 2/3: Your local ' + "release/#{release_tag}".bright + ' (formerly ' + 'develop'.bright + ") is live at "+"#{stag_app_name}".bright+"."
+            puts '           Please test here: ' + (app['web_url']).to_s.bright
             puts '           If everything looks good, you may proceed and finish the release.'
             puts '           If there are problems: Quit, delete the release branch and start fixing.'
             puts
             Hu::Tm.t(:phase2, cmd: 'deploy')
           elsif git_revisions[prod_app_name] != git_revisions[stag_app_name] && !release_branch_exists && git_revisions[:release] != git_revisions[stag_app_name]
-            puts 'Phase 3/3: HEADS UP. This is the last chance to detect problems.'
+            puts 'Phase 3/3: HEADS UP! This is the last chance to detect problems.'
             puts '           The final version of ' + "release/#{release_tag}".bright + ' is now staged.'
             puts
             puts '           Test here: ' + (app['web_url']).to_s.bright
@@ -331,11 +331,19 @@ module Hu
         table = TTY::Table.new header: %w(location commit tag app_last_modified app_last_modified_by dynos# state)
         busy '', :classic
         ts = []
+        workers = []
         tpl_row = ['?', '', '', '', '', '', '']
         revs = ThreadSafe::Hash.new
+        app_config = ThreadSafe::Hash.new
 
         [[0, stag_app_name], [1, prod_app_name]].each do |idx, app_name|
+          workers << Thread.new do
+            # config vars
+            app_config[app_name] = h.config_var.info(app_name)
+          end
+
           ts << Thread.new do
+            # dyno settings
             table_row = tpl_row.dup
             table_row[0] = app_name
             loop do
@@ -381,6 +389,10 @@ module Hu
           end
         end
 
+        workers.each do |t|
+          t.join
+        end
+
         rows = []
         ts.each do |t|
           idx, table_row = t.value
@@ -418,6 +430,16 @@ module Hu
         puts
 
         puts table.render(:unicode, padding: [0, 1, 0, 1], multiline: true)
+
+        missing_env = app_config[stag_app_name].keys - app_config[prod_app_name].keys
+        unless missing_env.empty?
+          puts
+          missing_env.each do |var|
+            puts " WARNING ".color(:red).bright.inverse + " Missing config in "+prod_app_name.bright+": #{var}"
+            sleep 0.42
+          end
+        end
+
         Hu::Tm.t(:status_screen, cmd: 'deploy')
         revs
       end
