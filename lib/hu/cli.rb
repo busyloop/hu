@@ -13,7 +13,7 @@ require 'hu/deploy'
 module Hu
   class Cli < Optix::Cli
     Optix.command do
-      text "Hu v#{Hu::VERSION} - Heroku Utility"
+      text "Hu v#{Hu::VERSION} - Heroku Utility - https://github.com/busyloop/hu"
       opt :quiet, 'Quiet mode (no progress output)', default: false
       opt :version, 'Print version and exit', short: :none
       trigger :version do
