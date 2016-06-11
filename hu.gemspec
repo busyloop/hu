@@ -26,7 +26,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'optix', '~> 1.2.4'
   spec.add_dependency 'blackbox', '~> 3.1.4'
-  spec.add_dependency 'platform-api', '~> 0.7.0'
+  spec.add_dependency 'platform-api', '~> 0.8.0'
   spec.add_dependency 'powerbar', '>= 1.0.16'
   spec.add_dependency 'hashdiff', '~> 0.3.0'
   spec.add_dependency 'version_sorter', '~> 2.0.0'
