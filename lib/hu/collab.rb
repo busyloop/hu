@@ -34,11 +34,14 @@ module Hu
         text ''
         text "\e[1mWARNING: Environment variable 'HEROKU_API_KEY' must be set.\e[0m"
       end
-      filter do
+      opt :quiet, 'Quiet mode (no progress bar)', default: false
+      filter do |_cmd, opts, _argv|
         if Hu::API_TOKEN.nil?
           STDERR.puts "\e[0;31;1mERROR: Environment variable 'HEROKU_API_KEY' must be set.\e[0m"
           exit 1
         end
+        $quiet = opts[:quiet]
+        $quiet = true unless STDOUT.isatty
       end
       def collab; end
 
