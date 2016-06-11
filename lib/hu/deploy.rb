@@ -215,7 +215,7 @@ module Hu
           end
 
           if release_branch_exists && git_revisions[:release] == git_revisions[stag_app_name]
-            puts 'Phase 2/3: Your local ' + "release/#{release_tag}".bright + ' (formerly ' + 'develop'.bright + ") is live at "+"#{stag_app_name}".bright+"."
+            puts 'Phase 2/3: Your local ' + "release/#{release_tag}".bright + ' (formerly ' + 'develop'.bright + ') is live at ' + stag_app_name.to_s.bright + '.'
             puts '           Please test here: ' + (app['web_url']).to_s.bright
             puts '           If everything looks good, you may proceed and finish the release.'
             puts '           If there are problems: Quit, delete the release branch and start fixing.'
@@ -394,9 +394,7 @@ module Hu
           end
         end
 
-        workers.each do |t|
-          t.join
-        end
+        workers.each(&:join)
 
         rows = []
         ts.each do |t|
@@ -440,7 +438,7 @@ module Hu
         unless missing_env.empty?
           puts
           missing_env.each do |var|
-            puts " WARNING ".color(:red).bright.inverse + " Missing config in "+prod_app_name.bright+": #{var}"
+            puts ' WARNING '.color(:red).bright.inverse + ' Missing config in ' + prod_app_name.bright + ": #{var}"
             sleep 0.42
           end
         end
@@ -533,7 +531,7 @@ module Hu
               end
             end
 
-            PTY.spawn("stty rows #{rows} cols #{cols}; "+line) do |r, _w, pid|
+            PTY.spawn("stty rows #{rows} cols #{cols}; " + line) do |r, _w, pid|
               begin
                 until r.eof?
                   c = r.getc
@@ -543,7 +541,7 @@ module Hu
                     c = c.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: "\e") # barf.
                     # hold on when we are (likely) inside an escape sequence
                     @minispin_disable = true  if c.ord == 27 || c.ord < 9
-                    @minispin_disable = false if c =~ /[A-Za-z]/ || [13,10].include?(c.ord)
+                    @minispin_disable = false if c =~ /[A-Za-z]/ || [13, 10].include?(c.ord)
                   end
                 end
               rescue Errno::EIO

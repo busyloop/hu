@@ -4,15 +4,6 @@ Lint/HandleExceptions:
     - 'lib/hu/common.rb'
     - 'lib/hu/telemetry.rb'
 
-# Offense count: 14
-Metrics/AbcSize:
-  Max: 298
-
-# Offense count: 2
-# Configuration parameters: CountComments.
-Metrics/ClassLength:
-  Max: 698
-
 # Offense count: 6
 Metrics/CyclomaticComplexity:
   Max: 45
