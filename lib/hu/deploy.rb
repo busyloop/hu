@@ -45,13 +45,14 @@ module Hu
 
       def deploy(_cmd, _opts, _argv)
         Hu::Tm.t(:invoke, cmd: 'deploy')
-        trap('INT') { shutdown; safe_abort; exit 1 }
+        trap('INT') { shutdown; puts "\e[0m\e[35;1m^C\e[0m"; exit 1 }
         at_exit do
-          shutdown
-          if $ERROR_INFO.class == SystemExit && 130 == $ERROR_INFO.status
-            puts
-            safe_abort
+          if $!.class == SystemExit && 130 == $!.status
+            puts "\n\n"
           end
+          Hu::Tm.flush!
+          shutdown
+          print "\e[0m\e[?25h"
         end
 
         begin
@@ -61,7 +62,6 @@ module Hu
           puts "Git error: #{e}".color(:red)
           puts 'You need to be inside the working copy of the app that you wish to deploy.'.color(:red)
           puts
-          safe_abort
           print TTY::Cursor.prev_line
           Hu::Tm.t(:error_not_in_working_copy, cmd: 'deploy')
           exit 1
@@ -816,7 +816,6 @@ module Hu
       end
 
       def shutdown
-        Hu::Tm.flush!
         @@shutting_down = true
         unbusy
       end
@@ -854,25 +853,6 @@ module Hu
         puts "--- ^#{label}^ ---"
       end
 
-      def safe_abort
-        @spinner&.stop
-        printf "\e[0m\e[?25l"
-        printf '(ヘ･_･)ヘ┳━┳'
-        sleep 0.5
-        printf "\e[12D(ヘ･_･)-┳━┳"
-        sleep 0.1
-        printf "\e[12D\e[31;1m(╯°□°）╯  ┻━┻"
-        sleep 0.1
-        printf "\e[1;31m\e[14D(╯°□°）╯    ┻━┻"
-        sleep 0.05
-        printf "\e[0;31m\e[15D(╯°□°）╯     ┻━┻"
-        sleep 0.05
-        printf "\e[30;1m\e[16D(╯°□°）╯      ┻━┻"
-        sleep 0.05
-        printf "\e[17D                 "
-        printf "\e[?25h"
-        puts
-      end
-    end
-  end
-end
+    end # /Class Deploy
+  end # /Class Cli
+end # /Module Hu
