@@ -6,12 +6,12 @@ Lint/HandleExceptions:
 
 # Offense count: 6
 Metrics/CyclomaticComplexity:
-  Max: 45
+  Max: 450
 
 # Offense count: 15
 # Configuration parameters: CountComments.
 Metrics/MethodLength:
-  Max: 254
+  Max: 500
 
 # Offense count: 4
 Metrics/PerceivedComplexity:

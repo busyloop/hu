@@ -137,7 +137,7 @@ module Hu
         end
 
         stag_app_name = app['name']
-        busy "fetching heroku app #{prod_app_id}", :dots
+        busy 'synchronizing', :dots
         prod_app_name = h.app.info(prod_app_id)['name']
         unbusy
 
@@ -189,7 +189,7 @@ module Hu
           release_branch_exists = branch_exists?("release/#{release_tag}")
 
           if release_branch_exists
-            puts "\nThis release will be " + release_tag.color(:red).bright
+            puts "\nThis release will be " + release_tag.color(:green).bright
             unless highest_version == 'v0.0.0'
               env = {
                 'PREVIOUS_TAG' => highest_version,
@@ -207,29 +207,29 @@ module Hu
           puts
 
           unless git_revisions[:release] == git_revisions[stag_app_name] || !release_branch_exists
-            puts 'Phase 1/3: The local release branch ' + "release/#{release_tag}".bright + ' was created.'
-            puts '           Nothing else has happened so far. Push this branch to'
-            puts '           ' + stag_app_name.to_s.bright + ' to begin the deploy procedure.'
+            puts ' Phase 1/3 '.inverse + ' The local release branch ' + "release/#{release_tag}".bright + ' was created.'
+            puts '            Nothing else has happened so far. Push this branch to'
+            puts '            ' + stag_app_name.to_s.bright + ' to begin the deploy procedure.'
             puts
             Hu::Tm.t(:phase1, cmd: 'deploy')
           end
 
           if release_branch_exists && git_revisions[:release] == git_revisions[stag_app_name]
-            puts 'Phase 2/3: Your local ' + "release/#{release_tag}".bright + ' (formerly ' + 'develop'.bright + ') is live at ' + stag_app_name.to_s.bright + '.'
-            puts '           Please test here: ' + (app['web_url']).to_s.bright
-            puts '           If everything looks good, you may proceed and finish the release.'
-            puts '           If there are problems: Quit, delete the release branch and start fixing.'
+            puts ' Phase 2/3 '.inverse + ' Your local ' + "release/#{release_tag}".bright + ' (formerly ' + 'develop'.bright + ') is live at ' + stag_app_name.to_s.bright + '.'
+            puts '            Please test here: ' + (app['web_url']).to_s.bright
+            puts '            If everything looks good, you may proceed and finish the release.'
+            puts '            If there are problems: Quit, delete the release branch and start fixing.'
             puts
             Hu::Tm.t(:phase2, cmd: 'deploy')
           elsif git_revisions[prod_app_name] != git_revisions[stag_app_name] && !release_branch_exists && git_revisions[:release] != git_revisions[stag_app_name]
-            puts 'Phase 3/3: HEADS UP! This is the last chance to detect problems.'
-            puts '           The final version of ' + "release/#{release_tag}".bright + ' is now staged.'
+            puts ' Phase 3/3 '.inverse + ' HEADS UP! This is the last chance to detect problems.'
+            puts '            The final version of ' + "release/#{release_tag}".bright + ' is now staged.'
             puts
-            puts '           Test here: ' + (app['web_url']).to_s.bright
+            puts '            Test here: ' + (app['web_url']).to_s.bright
             sleep 1
             puts
-            puts '           This is the exact version that will be promoted to production.'
-            puts "           From here you are on your own. Good luck #{`whoami`.chomp}!"
+            puts '            This is the exact version that will be promoted to production.'
+            puts "            From here you are on your own. Good luck #{`whoami`.chomp}!"
             puts
             Hu::Tm.t(:phase3, cmd: 'deploy')
           end
@@ -261,8 +261,6 @@ module Hu
               menu.choice "DEPLOY (promote #{stag_app_name} to #{prod_app_name})", :DEPLOY
             end
           end
-
-          puts
 
           case choice
           when :DEPLOY
@@ -328,18 +326,22 @@ module Hu
               release_tag, branch_already_exists = prompt_for_release_tag(major_bump, major_bump)
               Hu::Tm.t(:switch_release_type, bump: 'major', cmd: 'deploy')
             end
+          when :refresh
+            puts
           end
         end
       end
 
       def show_pipeline_status(pipeline_name, stag_app_name, prod_app_name, release_tag, clear = true)
         table = TTY::Table.new header: %w(location commit tag app_last_modified app_last_modified_by dynos# state)
-        busy 'loading', :huroku
+        busy 'synchronizing', :huroku
         ts = []
         workers = []
         tpl_row = ['?', '', '', '', '', '', '']
         revs = ThreadSafe::Hash.new
         app_config = ThreadSafe::Hash.new
+
+        revs[:develop] = `git rev-parse develop`[0..5]
 
         [[0, stag_app_name], [1, prod_app_name]].each do |idx, app_name|
           workers << Thread.new do
@@ -375,6 +377,8 @@ module Hu
 
               revs[app_name] = table_row[1] = slug_info['commit'][0..5]
 
+              table_row[1] = table_row[1].color(table_row[1] == revs[:develop] ? :green : :red)
+
               table_row[2] = `git tag --points-at #{slug_info['commit']} 2>/dev/null`
               table_row[2] = '' unless $?.success?
 
@@ -406,19 +410,21 @@ module Hu
         row[0] = 'master'
         revs[:master] = row[1] = `git rev-parse master`[0..5]
         row[2] = `git tag --points-at master`
+        row[1] = row[1].color(row[1] == revs[:develop] ? :green : :red)
         rows.unshift row
 
         if branch_exists? "release/#{release_tag}"
           row = tpl_row.dup
           row[0] = "release/#{release_tag}"
           revs["release/#{release_tag}"] = revs[:release] = row[1] = `git rev-parse release/#{release_tag}`[0..5]
+          row[1] = row[1].color(row[1] == revs[:release] ? :green : :red)
           row[2] = `git tag --points-at release/#{release_tag} 2>/dev/null`
           rows.unshift row
         end
 
         row = tpl_row.dup
         row[0] = 'develop'
-        revs[:develop] = row[1] = `git rev-parse develop`[0..5]
+        row[1] = revs[:develop].color(:green)
         row[2] = `git tag --points-at develop`
         rows.unshift row
 
@@ -448,7 +454,7 @@ module Hu
       end
 
       def heroku_app_by_git(git_url)
-        busy('fetching heroku apps', :dots)
+        busy('synchronizing', :dots)
         r = h.app.list.select { |e| e['git_url'] == git_url }
         unbusy
         raise "FATAL: Found multiple heroku apps with git_url=#{git_url}" if r.length > 1
@@ -456,7 +462,7 @@ module Hu
       end
 
       def heroku_pipeline_details(app)
-        busy('fetching heroku pipelines', :dots)
+        busy('synchronizing', :dots)
         couplings = h.pipeline_coupling.list
         unbusy
         r = couplings.select { |e| e['app']['id'] == app['id'] }
@@ -689,38 +695,53 @@ module Hu
         EOS
       end
 
-      def prompt_for_release_tag(propose_version = 'v0.0.1', try_version = nil, keep_existing = false)
+      def prompt_for_release_tag(_propose_version = 'v0.0.1', try_version = nil, keep_existing = false)
         prompt = TTY::Prompt.new
         loop do
           if try_version
             release_tag = try_version
-            try_version = nil
-          else
-            show_existing_git_tags
-            release_tag = prompt.ask('Please enter a tag for this release', default: propose_version)
-            begin
-              unless release_tag[0] == 'v'
-                raise ArgumentError, 'Version string must start with the letter v'
-              end
-              raise ArgumentError, 'too short' if release_tag.length < 5
-              Versionomy.parse(release_tag)
-            rescue => e
-              puts "Error: Tag does not look like a semantic version (#{e})".color(:red)
-              next
-            end
+            # try_version = nil
           end
+          # else
+          #  show_existing_git_tags
+          #  release_tag = prompt.ask('Please enter a tag for this release', default: propose_version)
+          #  begin
+          #    unless release_tag[0] == 'v'
+          #      raise ArgumentError, 'Version string must start with the letter v'
+          #    end
+          #    raise ArgumentError, 'too short' if release_tag.length < 5
+          #    Versionomy.parse(release_tag)
+          #  rescue => e
+          #    puts "Error: Tag does not look like a semantic version (#{e})".color(:red)
+          #    next
+          #  end
+          # end
 
           branches = `git for-each-ref refs/heads/ --format='%(refname:short)'`.lines.map(&:chomp)
           existing_branch = branches.find { |b| b.start_with? 'release/' }
           branch_already_exists = !existing_branch.nil?
           release_tag = existing_branch[8..-1] if keep_existing && branch_already_exists
 
-          if branch_already_exists && !keep_existing
-            choice = prompt.expand("The branch '" + "release/#{release_tag}".color(:red) + "' already exists. What shall we do?",
-                                   default: 0) do |q|
-              q.choice key: 'k', name: 'Keep, continue with the existing branch', value: :keep
-              q.choice key: 'D', name: "Delete branch release/#{release_tag} and retry", value: :delete
-              q.choice key: 'q', name: 'Quit', value: :quit
+          revs = {}
+          revs[:develop] = `git rev-parse develop`[0..5]
+          revs[:release] = `git rev-parse release/#{release_tag}`[0..5] if branch_already_exists
+
+          if branch_already_exists && revs[:develop] != revs[:release]
+            puts
+
+            puts 'Oops!'.bright
+            puts
+            puts 'Your release-branch ' + "release/#{release_tag}".bright + ' is out of sync with ' + 'develop'.bright + '.'
+            puts
+            puts 'develop is at ' + revs[:develop].bright + ", release/#{release_tag} is at " + revs[:release].bright + '.'
+            puts
+            puts 'This usually means the release branch is old and does not'
+            puts 'not reflect what you actually want to deploy right now.'
+            puts
+            choice = prompt.select('What shall we do?') do |menu|
+              menu.enum '.'
+              menu.choice "Delete branch 'release/#{release_tag}' and create new release branch from 'develop'", :delete
+              menu.choice 'Quit - do nothing, let me inspect the situation', :quit
             end
 
             case choice
