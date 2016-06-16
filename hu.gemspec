@@ -35,7 +35,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'tty-spinner'
   spec.add_dependency 'tty-table'
   spec.add_dependency 'rainbow'
-  spec.add_dependency 'netrc'
+  spec.add_dependency 'netrc', '= 0.11.0'
   spec.add_dependency 'chronic_duration'
   spec.add_dependency 'thread_safe'
   spec.add_dependency 'rugged'
