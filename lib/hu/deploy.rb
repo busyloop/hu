@@ -441,6 +441,12 @@ module Hu
         puts table.render(:unicode, padding: [0, 1, 0, 1], multiline: true)
 
         missing_env = app_config[stag_app_name].keys - app_config[prod_app_name].keys
+        env_ignore = begin
+                       File.read(File.join('.hu', 'env_ignore'))&.lines.map(&:chomp)
+                     rescue
+                       nil
+                     end
+        missing_env -= env_ignore if missing_env && env_ignore
         unless missing_env.empty?
           puts
           missing_env.each do |var|
