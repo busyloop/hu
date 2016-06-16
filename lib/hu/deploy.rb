@@ -592,10 +592,13 @@ module Hu
 
         versions = output.lines.map(&:chomp).reject do |e|
           begin
+                                                 # yes, this is really how rubocop
+                                                 # wants to format this... *shrug*
                                                  Versionomy.parse(e)
+                                                 false
                                                rescue
                                                  true
-                                               end; false
+                                               end
         end
         versions = versions.map { |e| e[0].casecmp('v').zero? ? e.downcase : "v#{e.downcase}" }
         versions = VersionSorter.sort(versions)
