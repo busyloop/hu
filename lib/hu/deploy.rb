@@ -31,7 +31,7 @@ module Hu
       @@spinner = nil
       @@home_branch = nil
 
-      MINIMUM_GIT_VERSION = Versionomy.parse('2.9.0')
+      #MINIMUM_GIT_VERSION = Versionomy.parse('2.9.0')
 
       text 'Interactive deployment.'
       desc 'Interactive deployment'
@@ -446,10 +446,10 @@ module Hu
           table << r
         end
 
-        git_version_warning = ''
-        if current_git_version < MINIMUM_GIT_VERSION
-          git_version_warning = " (your git is outdated. please upgrade to v#{MINIMUM_GIT_VERSION}!)".color(:black).bright
-        end
+        #git_version_warning = ''
+        #if current_git_version < MINIMUM_GIT_VERSION
+        #  git_version_warning = " (your git is outdated. please upgrade to v#{MINIMUM_GIT_VERSION}!)".color(:black).bright
+        #end
 
         puts "\e[H\e[2J" if clear
         puts " PIPELINE #{pipeline_name} ".inverse+git_version_warning
@@ -881,9 +881,9 @@ module Hu
         @git.head.name.sub(/^refs\/heads\//, '')
       end
 
-      def current_git_version
-        Versionomy.parse(`git --version`.chomp.split(' ')[-1])
-      end
+      #def current_git_version
+      #  Versionomy.parse(`git --version`.chomp.split(' ')[-1])
+      #end
 
       def create_changelog(env)
         if File.executable? '.hu/hooks/changelog'
