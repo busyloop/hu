@@ -66,7 +66,6 @@ module Hu
           puts "Git error: #{e}".color(:red)
           puts 'You need to be inside the working copy of the app that you wish to deploy.'.color(:red)
           puts
-          print TTY::Cursor.prev_line
           Hu::Tm.t(:error_not_in_working_copy, cmd: 'deploy')
           exit 1
         end
