@@ -31,6 +31,8 @@ module Hu
       @@spinner = nil
       @@home_branch = nil
 
+      MINIMUM_GIT_VERSION = Versionomy.parse('2.9.0')
+
       text 'Interactive deployment.'
       desc 'Interactive deployment'
       if Hu::API_TOKEN.nil?
@@ -147,6 +149,14 @@ module Hu
         busy 'update working copy', :dots
         wc_update.join
         unbusy
+
+        unless develop_can_be_merged_into_master?
+          puts
+          puts "ERROR: It seems like a merge of 'develop' into 'master' would fail.".color(:red)
+          puts "       Aborting early to prevent a merge conflict.".color(:red)
+          puts
+          exit 1
+        end
 
         highest_version = find_highest_version_tag
         begin
@@ -437,8 +447,13 @@ module Hu
           table << r
         end
 
+        git_version_warning = ''
+        if current_git_version < MINIMUM_GIT_VERSION
+          git_version_warning = " (your git is outdated. please upgrade to v#{MINIMUM_GIT_VERSION}!)".color(:black).bright
+        end
+
         puts "\e[H\e[2J" if clear
-        puts " PIPELINE #{pipeline_name} ".inverse
+        puts " PIPELINE #{pipeline_name} ".inverse+git_version_warning
         puts
 
         puts table.render(:unicode, padding: [0, 1, 0, 1], multiline: true)
@@ -843,6 +858,7 @@ module Hu
         return if @@home_branch.nil? or @@home_branch == current_branch_name
         run_each <<-EOS.strip_heredoc
         :quiet
+        :nospinner
         :return
         # Return to home branch
         git checkout #{@@home_branch}
@@ -850,8 +866,24 @@ module Hu
         Hu::Tm.t(:return_home, cmd: 'deploy')
       end
 
+      def develop_can_be_merged_into_master?
+        status = run_each <<-EOS.strip_heredoc
+        :quiet
+        :nospinner
+        :return
+        git checkout develop
+        git diff --exit-code --quiet develop..master || { git format-patch master --stdout >/tmp/hu.diff.tmp && git checkout master && git apply --check </tmp/hu.diff.tmp ; }
+        rm -f /tmp/hu.diff.tmp
+        EOS
+        status == 0
+      end
+
       def current_branch_name
         @git.head.name.sub(/^refs\/heads\//, '')
+      end
+
+      def current_git_version
+        Versionomy.parse(`git --version`.chomp.split(' ')[-1])
       end
 
       def create_changelog(env)
