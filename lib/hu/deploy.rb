@@ -29,6 +29,7 @@ module Hu
       $stdout.sync
       @@shutting_down = false
       @@spinner = nil
+      @@home_branch = nil
 
       text 'Interactive deployment.'
       desc 'Interactive deployment'
@@ -52,6 +53,7 @@ module Hu
           end
           Hu::Tm.flush!
           shutdown
+          return_to_home_branch
           print "\e[0m\e[?25h"
         end
 
@@ -103,6 +105,7 @@ module Hu
         end
 
         push_url = heroku_git_remote
+        @@home_branch = current_branch_name
 
         wc_update = Thread.new { update_working_copy }
 
@@ -834,6 +837,21 @@ module Hu
         git merge --abort
         EOS
         Hu::Tm.t(:abort_merge, cmd: 'deploy')
+      end
+
+      def return_to_home_branch
+        return if @@home_branch.nil? or @@home_branch == current_branch_name
+        run_each <<-EOS.strip_heredoc
+        :quiet
+        :return
+        # Return to home branch
+        git checkout #{@@home_branch}
+        EOS
+        Hu::Tm.t(:return_home, cmd: 'deploy')
+      end
+
+      def current_branch_name
+        @git.head.name.sub(/^refs\/heads\//, '')
       end
 
       def create_changelog(env)
