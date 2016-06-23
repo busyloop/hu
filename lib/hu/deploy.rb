@@ -446,7 +446,7 @@ module Hu
           table << r
         end
 
-        #git_version_warning = ''
+        git_version_warning = ''
         #if current_git_version < MINIMUM_GIT_VERSION
         #  git_version_warning = " (your git is outdated. please upgrade to v#{MINIMUM_GIT_VERSION}!)".color(:black).bright
         #end
