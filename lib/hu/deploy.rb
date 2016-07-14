@@ -149,13 +149,13 @@ module Hu
         wc_update.join
         unbusy
 
-        unless develop_can_be_merged_into_master?
-          puts
-          puts "ERROR: It seems like a merge of 'develop' into 'master' would fail.".color(:red)
-          puts "       Aborting early to prevent a merge conflict.".color(:red)
-          puts
-          exit 1
-        end
+        # unless develop_can_be_merged_into_master?
+        #   puts
+        #   puts "ERROR: It seems like a merge of 'develop' into 'master' would fail.".color(:red)
+        #   puts "       Aborting early to prevent a merge conflict.".color(:red)
+        #   puts
+        #   exit 1
+        # end
 
         highest_version = find_highest_version_tag
         begin
