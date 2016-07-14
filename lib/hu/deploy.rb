@@ -151,7 +151,7 @@ module Hu
 
         unless develop_can_be_merged_into_master?
           puts
-          puts "ERROR: It seems like a merge of 'develop' into 'master' would fail.".color(:red)
+          puts "ERROR: It looks like a merge of 'develop' into 'master' would fail.".color(:red)
           puts "       Aborting early to prevent a merge conflict.".color(:red)
           puts
           exit 1
