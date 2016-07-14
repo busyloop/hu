@@ -871,7 +871,7 @@ module Hu
         :nospinner
         :return
         git checkout develop
-        git diff --exit-code --quiet develop..master || { git format-patch master --stdout >/tmp/hu.diff.tmp && git checkout master && git apply --check </tmp/hu.diff.tmp ; }
+        git diff --exit-code --quiet develop..master || { git format-patch master --stdout >/tmp/hu.diff.tmp && git checkout master && git apply --check </tmp/hu.diff.tmp ; } || [ ! -s /tmp/hu.diff.tmp ]
         rm -f /tmp/hu.diff.tmp
         EOS
         status == 0
