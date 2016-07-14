@@ -149,13 +149,13 @@ module Hu
         wc_update.join
         unbusy
 
-        # unless develop_can_be_merged_into_master?
-        #   puts
-        #   puts "ERROR: It seems like a merge of 'develop' into 'master' would fail.".color(:red)
-        #   puts "       Aborting early to prevent a merge conflict.".color(:red)
-        #   puts
-        #   exit 1
-        # end
+        unless develop_can_be_merged_into_master?
+          puts
+          puts "ERROR: It seems like a merge of 'develop' into 'master' would fail.".color(:red)
+          puts "       Aborting early to prevent a merge conflict.".color(:red)
+          puts
+          exit 1
+        end
 
         highest_version = find_highest_version_tag
         begin
@@ -870,9 +870,8 @@ module Hu
         :quiet
         :nospinner
         :return
-        git checkout develop
-        git diff --exit-code --quiet develop..master || { git format-patch master --stdout >/tmp/hu.diff.tmp && git checkout master && git apply --check </tmp/hu.diff.tmp ; } || [ ! -s /tmp/hu.diff.tmp ]
-        rm -f /tmp/hu.diff.tmp
+        git checkout master && git merge --no-commit --no-ff develop || { git merge --abort; false ;}
+        git merge --abort || true
         EOS
         status == 0
       end
