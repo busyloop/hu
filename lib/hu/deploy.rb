@@ -143,9 +143,7 @@ module Hu
         stag_app_name = app['name']
         busy 'synchronizing', :dots
         prod_app_name = h.app.info(prod_app_id)['name']
-        unbusy
 
-        busy 'update working copy', :dots
         wc_update.join
         unbusy
 
