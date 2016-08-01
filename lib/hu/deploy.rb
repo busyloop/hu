@@ -540,8 +540,12 @@ module Hu
               i = 0
               loop do
                 break if @minispin_last_char_at == :end
-                if 0.23 > Time.now - @minispin_last_char_at || @minispin_disable
-                  sleep 0.1
+                begin
+                  if 0.23 > Time.now - @minispin_last_char_at || @minispin_disable
+                    sleep 0.1
+                    next
+                  end
+                rescue
                   next
                 end
                 @spinlock.synchronize do
