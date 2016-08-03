@@ -9,6 +9,7 @@ require 'platform-api'
 require 'hu/common'
 require 'hu/collab'
 require 'hu/deploy'
+require 'hu/scale'
 
 module Hu
   class Cli < Optix::Cli
