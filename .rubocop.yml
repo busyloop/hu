@@ -12,3 +12,7 @@ Metrics/ClassLength:
 Metrics/AbcSize:
   Max: 500
 
+Metrics/PerceivedComplexity:
+  Max: 100
+
+

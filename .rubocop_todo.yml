@@ -14,10 +14,6 @@ Metrics/MethodLength:
   Max: 500
 
 # Offense count: 4
-Metrics/PerceivedComplexity:
-  Max: 43
-
-# Offense count: 4
 Style/ClassVars:
   Exclude:
     - 'lib/hu/deploy.rb'

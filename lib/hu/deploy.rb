@@ -31,7 +31,7 @@ module Hu
       @@spinner = nil
       @@home_branch = nil
 
-      #MINIMUM_GIT_VERSION = Versionomy.parse('2.9.0')
+      # MINIMUM_GIT_VERSION = Versionomy.parse('2.9.0')
 
       text 'Interactive deployment.'
       desc 'Interactive deployment'
@@ -150,7 +150,7 @@ module Hu
         unless develop_can_be_merged_into_master?
           puts
           puts "ERROR: It looks like a merge of 'develop' into 'master' would fail.".color(:red)
-          puts "       Aborting early to prevent a merge conflict.".color(:red)
+          puts '       Aborting early to prevent a merge conflict.'.color(:red)
           puts
           exit 1
         end
@@ -445,12 +445,12 @@ module Hu
         end
 
         git_version_warning = ''
-        #if current_git_version < MINIMUM_GIT_VERSION
+        # if current_git_version < MINIMUM_GIT_VERSION
         #  git_version_warning = " (your git is outdated. please upgrade to v#{MINIMUM_GIT_VERSION}!)".color(:black).bright
-        #end
+        # end
 
         puts "\e[H\e[2J" if clear
-        puts " PIPELINE #{pipeline_name} ".inverse+git_version_warning
+        puts " PIPELINE #{pipeline_name} ".inverse + git_version_warning
         puts
 
         puts table.render(:unicode, padding: [0, 1, 0, 1], multiline: true)
@@ -856,7 +856,7 @@ module Hu
       end
 
       def return_to_home_branch
-        return if @@home_branch.nil? or @@home_branch == current_branch_name
+        return if @@home_branch.nil? || @@home_branch == current_branch_name
         run_each <<-EOS.strip_heredoc
         :quiet
         :nospinner
@@ -879,12 +879,12 @@ module Hu
       end
 
       def current_branch_name
-        @git.head.name.sub(/^refs\/heads\//, '')
+        @git.head.name.sub(%r{^refs\/heads\/}, '')
       end
 
-      #def current_git_version
+      # def current_git_version
       #  Versionomy.parse(`git --version`.chomp.split(' ')[-1])
-      #end
+      # end
 
       def create_changelog(env)
         if File.executable? '.hu/hooks/changelog'

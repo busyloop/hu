@@ -66,10 +66,10 @@ module Hu
           if s[:method].nil?
             color = "\e[0m"
             msg = '<-- Can not resolve this (NO-OP)'
-            icon = "⚠️"
+            icon = '⚠️'
           elsif s[:invalid]
             color = "\e[0m"
-            icon = "⚠️"
+            icon = '⚠️'
           end
           STDERR.printf "%1s %s%6s %-30s %-15s %-30s %s\e[0m\n", icon, color, s[:op_name], s[:app_name], s[:role], s[:value], msg
           if s[:invalid]
