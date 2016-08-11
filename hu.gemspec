@@ -43,4 +43,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'lolcat'
   spec.add_dependency 'analytics-ruby'
   spec.add_dependency 'config'
+  spec.add_dependency 'awesome_print'
 end
