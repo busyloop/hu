@@ -1,11 +1,4 @@
 # frozen_string_literal: true
-require 'powerbar'
-require 'yaml'
-require 'hashdiff'
-require 'set'
-require 'netrc'
-require 'platform-api'
-
 module Hu
   class Cli < Optix::Cli
     class Collab < Optix::Cli
@@ -42,6 +35,13 @@ module Hu
         end
         $quiet = opts[:quiet]
         $quiet = true unless STDOUT.isatty
+
+        require 'powerbar'
+        require 'yaml'
+        require 'hashdiff'
+        require 'set'
+        require 'netrc'
+        require 'platform-api'
       end
       def collab; end
 

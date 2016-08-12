@@ -1,10 +1,7 @@
 # frozen_string_literal: true
 require 'hu/version'
 require 'optix'
-require 'powerbar'
-require 'yaml'
 require 'netrc'
-require 'platform-api'
 
 require 'hu/common'
 require 'hu/collab'

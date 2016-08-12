@@ -1,8 +1,4 @@
 # frozen_string_literal: true
-require 'yaml'
-require 'netrc'
-require 'platform-api'
-require 'rainbow'
 
 module Hu
   class Cli < Optix::Cli
@@ -80,6 +76,10 @@ module Hu
           STDERR.puts "\e[0;31;1mERROR: Environment variable 'HEROKU_API_KEY' must be set.\e[0m"
           exit 1
         end
+        require 'yaml'
+        require 'platform-api'
+        require 'rainbow'
+        require 'rainbow/ext/string'
       end
 
       def scale(_cmd, _opts, _args)

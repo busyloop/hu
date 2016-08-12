@@ -1,24 +1,5 @@
 # frozen_string_literal: true
-require 'version_sorter'
-require 'versionomy'
-require 'tty-prompt'
 require 'tty-spinner'
-require 'tty-table'
-require 'rainbow'
-require 'rainbow/ext/string'
-require 'open3'
-require 'json'
-require 'awesome_print'
-require 'chronic_duration'
-require 'tempfile'
-require 'thread_safe'
-require 'io/console'
-require 'rugged'
-require 'pty'
-require 'thread'
-require 'paint'
-require 'lolcat/lol'
-require 'io/console'
 
 module Hu
   class Cli < Optix::Cli
@@ -44,16 +25,48 @@ module Hu
           STDERR.puts "\e[0;31;1mERROR: Environment variable 'HEROKU_API_KEY' must be set.\e[0m"
           exit 1
         end
+        require 'tty-cursor'
+        print TTY::Cursor.hide + "\e[30;1ms"
+        require 'rainbow'
+        print 'y'
+        require 'rainbow/ext/string'
+        print 'n'
+        require 'platform-api'
+        print 'c'
+        require 'version_sorter'
+        print 'h'
+        require 'versionomy'
+        print 'r'
+        require 'tty-prompt'
+        print 'o'
+        require 'tty-table'
+        print 'n'
+        require 'open3'
+        print 'i'
+        require 'json'
+        require 'awesome_print'
+        print 'z'
+        require 'chronic_duration'
+        require 'tempfile'
+        print 'i'
+        require 'thread_safe'
+        require 'io/console'
+        print 'n'
+        require 'rugged'
+        require 'pty'
+        print 'g'
+        require 'thread'
+        require 'paint'
+        require 'lolcat/lol'
+        require 'io/console'
       end
 
       def deploy(_cmd, _opts, _argv)
-        Hu::Tm.t(:invoke, cmd: 'deploy')
         trap('INT') { shutdown; puts "\e[0m\e[35;1m^C\e[0m"; exit 1 }
         at_exit do
           if $!.class == SystemExit && 130 == $!.status
             puts "\n\n"
           end
-          Hu::Tm.flush!
           shutdown
           return_to_home_branch
           print "\e[0m\e[?25h"
@@ -66,7 +79,6 @@ module Hu
           puts "Git error: #{e}".color(:red)
           puts 'You need to be inside the working copy of the app that you wish to deploy.'.color(:red)
           puts
-          Hu::Tm.t(:error_not_in_working_copy, cmd: 'deploy')
           exit 1
         end
 
@@ -78,7 +90,6 @@ module Hu
           puts
           puts '       Sorry, we need an origin here. We really do.'
           puts
-          Hu::Tm.t(:error_no_git_origin, cmd: 'deploy')
           exit 1
         end
 
@@ -88,7 +99,6 @@ module Hu
           puts
           puts "       Please run 'git flow init -d'"
           puts
-          Hu::Tm.t(:error_no_git_flow, cmd: 'deploy')
           exit 1
         end
 
@@ -101,7 +111,6 @@ module Hu
           puts
           puts "       git config --add gitflow.prefix.versiontag ''".bright
           puts
-          Hu::Tm.t(:error_git_flow_prefix_enabled, cmd: 'deploy')
           exit 1
         end
 
@@ -119,7 +128,6 @@ module Hu
           puts
           puts "       Please run 'git remote rm heroku'. Then run 'hu deploy' again to select a new remote."
           puts
-          Hu::Tm.t(:error_no_heroku_app_for_remote, cmd: 'deploy')
           exit 1
         end
 
@@ -135,7 +143,6 @@ module Hu
 
           puts "       Please run 'git remote rm heroku'. Then run 'hu deploy' again to select a new remote."
           puts
-          Hu::Tm.t(:error_remote_not_staging, cmd: 'deploy')
           sleep 2
           exit 1
         end
@@ -145,9 +152,9 @@ module Hu
         prod_app_name = h.app.info(prod_app_id)['name']
 
         wc_update.join
-        unbusy
 
         unless develop_can_be_merged_into_master?
+          unbusy
           puts
           puts "ERROR: It looks like a merge of 'develop' into 'master' would fail.".color(:red)
           puts '       Aborting early to prevent a merge conflict.'.color(:red)
@@ -190,6 +197,8 @@ module Hu
 
         prompt = TTY::Prompt.new
 
+        unbusy
+
         clearscreen = true
         loop do
           git_revisions = show_pipeline_status(pipeline_name, stag_app_name, prod_app_name, release_tag, clearscreen)
@@ -221,7 +230,6 @@ module Hu
             puts '            Nothing else has happened so far. Push this branch to'
             puts '            ' + stag_app_name.to_s.bright + ' to begin the deploy procedure.'
             puts
-            Hu::Tm.t(:phase1, cmd: 'deploy')
           end
 
           if release_branch_exists && git_revisions[:release] == git_revisions[stag_app_name]
@@ -230,7 +238,6 @@ module Hu
             puts '            If everything looks good, you may proceed and finish the release.'
             puts '            If there are problems: Quit, delete the release branch and start fixing.'
             puts
-            Hu::Tm.t(:phase2, cmd: 'deploy')
           elsif git_revisions[prod_app_name] != git_revisions[stag_app_name] && !release_branch_exists && git_revisions[:release] != git_revisions[stag_app_name]
             puts ' Phase 3/3 '.inverse + ' HEADS UP! This is the last chance to detect problems.'
             puts '            The final version of ' + "release/#{release_tag}".bright + ' is now staged.'
@@ -241,7 +248,6 @@ module Hu
             puts '            This is the exact version that will be promoted to production.'
             puts "            From here you are on your own. Good luck #{`whoami`.chomp}!"
             puts
-            Hu::Tm.t(:phase3, cmd: 'deploy')
           end
 
           choice = prompt.select('Choose your destiny') do |menu|
@@ -274,12 +280,9 @@ module Hu
 
           case choice
           when :DEPLOY
-            Hu::Tm.t(:promote_begin, cmd: 'deploy')
             promote_to_production
-            Hu::Tm.t(:promote_end, cmd: 'deploy')
             anykey
           when :finish_release
-            Hu::Tm.t(:finish_begin, cmd: 'deploy')
             old_editor = ENV['EDITOR']
             old_git_editor = ENV['GIT_EDITOR']
             tf = Tempfile.new('hu-tag')
@@ -302,39 +305,31 @@ module Hu
               puts 'where the above sequence of commands can'
               puts 'succeed. Then try again.'
               puts
-              Hu::Tm.t(:finish_fail, cmd: 'deploy')
               exit 1
             end
             ENV['EDITOR'] = old_editor
             ENV['GIT_EDITOR'] = old_git_editor
-            Hu::Tm.t(:finish_end, cmd: 'deploy')
             anykey
           when :push_to_staging
-            Hu::Tm.t(:stage_begin, cmd: 'deploy')
             run_each <<-EOS.strip_heredoc
               :stream
               git push #{push_url} release/#{release_tag}:master -f
               EOS
-            Hu::Tm.t(:stage_end, cmd: 'deploy')
             anykey
           when :abort_ask
-            Hu::Tm.t(:user_quit, cmd: 'deploy')
             puts if delete_branch("release/#{release_tag}")
             exit 0
           when :bump_tiny
             if delete_branch("release/#{release_tag}")
               release_tag, branch_already_exists = prompt_for_release_tag(tiny_bump, tiny_bump)
-              Hu::Tm.t(:switch_release_type, bump: 'patch', cmd: 'deploy')
             end
           when :bump_minor
             if delete_branch("release/#{release_tag}")
               release_tag, branch_already_exists = prompt_for_release_tag(minor_bump, minor_bump)
-              Hu::Tm.t(:switch_release_type, bump: 'minor', cmd: 'deploy')
             end
           when :bump_major
             if delete_branch("release/#{release_tag}")
               release_tag, branch_already_exists = prompt_for_release_tag(major_bump, major_bump)
-              Hu::Tm.t(:switch_release_type, bump: 'major', cmd: 'deploy')
             end
           when :refresh
             puts
@@ -470,7 +465,6 @@ module Hu
           end
         end
 
-        Hu::Tm.t(:status_screen, cmd: 'deploy')
         revs
       end
 
@@ -601,7 +595,6 @@ module Hu
           shutdown if opts[:failfast]
           puts "Error, exit #{status.exitstatus}: #{line} (L#{i})".color(:red).bright
 
-          Hu::Tm.t(:runeach_error, exitstatus: status.exitstatus, cmd: 'deploy')
           exit status.exitstatus if opts[:failfast]
           return status.exitstatus
         end
@@ -646,7 +639,6 @@ module Hu
           git checkout develop
           git branch -D #{branch_name}
         EOS
-        Hu::Tm.t(:delete_release_branch, cmd: 'deploy')
         puts "Branch #{branch_name} deleted.".color(:red)
         true
       end
@@ -664,7 +656,6 @@ module Hu
         # Starting release #{release_tag.color(:green)}
         git flow release start #{release_tag} >/dev/null
         EOS
-        Hu::Tm.t(:start_release, cmd: 'deploy')
       end
 
       def update_working_copy
@@ -675,7 +666,6 @@ module Hu
         git checkout develop && git pull
         git checkout master && git pull --rebase origin master
         EOS
-        Hu::Tm.t(:update_working_copy, cmd: 'deploy')
       end
 
       def heroku_git_remote
@@ -685,6 +675,7 @@ module Hu
 
       def ensure_repo_has_heroku_remote
         exit_code = run_each <<-EOS.strip_heredoc
+        :nospinner
         :quiet
         :return
         # Ensure we have a 'heroku' git remote
@@ -852,7 +843,6 @@ module Hu
         # Abort failed merge (if any)
         git merge --abort
         EOS
-        Hu::Tm.t(:abort_merge, cmd: 'deploy')
       end
 
       def return_to_home_branch
@@ -864,7 +854,6 @@ module Hu
         # Return to home branch
         git checkout #{@@home_branch}
         EOS
-        Hu::Tm.t(:return_home, cmd: 'deploy')
       end
 
       def develop_can_be_merged_into_master?

@@ -15,13 +15,11 @@ class String
 end
 
 Config.load_and_set_settings Hu::CONFIG_FILE
-require 'hu/telemetry'
 
 begin
   unless ENV['SKIP_VERSION_CHECK']
     version_info = BB::Gem.version_info(check_interval: 900)
     unless version_info[:installed_is_latest] == true
-      Hu::Tm.t(:gem_outdated, installed_version: version_info[:gem_installed_version], available_version: version_info[:gem_latest_version])
       puts
       puts "\e[33;1mWoops! \e[0mA newer version of #{version_info[:gem_name]} is available."
       puts "       Please type '\e[1mgem install #{version_info[:gem_name]}\e[0m' to upgrade (v#{version_info[:gem_installed_version]} -> v#{version_info[:gem_latest_version]})."
@@ -32,5 +30,3 @@ begin
   end
 rescue
 end
-
-Hu::Tm.t(:launch)

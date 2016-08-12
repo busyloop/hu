@@ -34,6 +34,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'tty-prompt', '~> 0.6.0'
   spec.add_dependency 'tty-spinner'
   spec.add_dependency 'tty-table'
+  spec.add_dependency 'tty-cursor'
   spec.add_dependency 'rainbow'
   spec.add_dependency 'netrc', '= 0.11.0'
   spec.add_dependency 'chronic_duration'
