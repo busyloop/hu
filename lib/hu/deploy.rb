@@ -193,11 +193,11 @@ module Hu
 
         likely_next_version = tiny_bump
 
+        unbusy
+
         release_tag, branch_already_exists = prompt_for_release_tag(likely_next_version, likely_next_version, true)
 
         prompt = TTY::Prompt.new
-
-        unbusy
 
         clearscreen = true
         loop do
