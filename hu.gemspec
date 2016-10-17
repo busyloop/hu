@@ -32,7 +32,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'version_sorter', '~> 2.0.0'
   spec.add_dependency 'versionomy', '~> 0.5.0'
   spec.add_dependency 'tty-prompt', '~> 0.6.0'
-  spec.add_dependency 'tty-spinner'
+  spec.add_dependency 'tty-spinner', '= 0.3.0'
   spec.add_dependency 'tty-table'
   spec.add_dependency 'tty-cursor'
   spec.add_dependency 'rainbow'
