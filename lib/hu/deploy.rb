@@ -5,7 +5,7 @@ module Hu
   class Cli < Optix::Cli
     class Deploy < Optix::Cli
       ::TTY::Formats::FORMATS[:hu] = { frames: '🌑🌒🌓🌔🌕🌖🌗🌘'.chars, interval: 10 }
-      ::TTY::Formats::FORMATS[:huroku] = { frames: '⣾⣽⣻⢿⡿⣟⣯⣷'.chars, interval: 10 }
+      ::TTY::Formats::FORMATS[:huroku] = { frames: '⣷⣯⣟⡿⢿⣻⣽⣾'.chars, interval: 10 }
 
       $stdout.sync
       @@shutting_down = false
