@@ -75,6 +75,7 @@ module Hu
         begin
           @git = Rugged::Repository.discover('.')
         rescue Rugged::RepositoryError => e
+          print TTY::Cursor.clear_line + TTY::Cursor.show
           puts
           puts "Git error: #{e}".color(:red)
           puts 'You need to be inside the working copy of the app that you wish to deploy.'.color(:red)
@@ -85,15 +86,17 @@ module Hu
         Dir.chdir(@git.workdir)
 
         if @git.config['branch.master.remote'] != 'origin'
+          print TTY::Cursor.clear_line + TTY::Cursor.show
           puts
           puts "ERROR: Remote of branch 'master' does not point to 'origin'.".color(:red)
           puts
-          puts '       Sorry, we need an origin here. We really do.'
+          puts "       Please run 'git config branch.master.remote origin'"
           puts
           exit 1
         end
 
         if @git.config['gitflow.branch.master'].nil?
+          print TTY::Cursor.clear_line + TTY::Cursor.show
           puts
           puts "ERROR: This repository doesn't seem to be git-flow enabled.".color(:red)
           puts
@@ -104,6 +107,7 @@ module Hu
 
         unless @git.config['gitflow.prefix.versiontag'].nil? ||
                @git.config['gitflow.prefix.versiontag'].empty?
+          print TTY::Cursor.clear_line + TTY::Cursor.show
           puts
           puts 'ERROR: git-flow version prefix configured.'.color(:red)
           puts
@@ -122,6 +126,7 @@ module Hu
         app = heroku_app_by_git(push_url)
 
         if app.nil?
+          print TTY::Cursor.clear_line + TTY::Cursor.show
           puts
           puts "ERROR: Found no heroku app for git remote #{push_url}".color(:red)
           puts '       Are you logged into the right heroku account?'.color(:red)
@@ -134,6 +139,7 @@ module Hu
         pipeline_name, stag_app_id, prod_app_id = heroku_pipeline_details(app)
 
         if app['id'] != stag_app_id
+          print TTY::Cursor.clear_line + TTY::Cursor.show
           puts
           puts "ERROR: The git remote 'heroku' points to app '#{app['name']}'".color(:red)
           puts "       which is not in stage 'staging'".color(:red) +
@@ -233,7 +239,7 @@ module Hu
           end
 
           if release_branch_exists && git_revisions[:release] == git_revisions[stag_app_name]
-            puts ' Phase 2/3 '.inverse + ' Your local ' + "release/#{release_tag}".bright + ' (formerly ' + 'develop'.bright + ') is live at ' + stag_app_name.to_s.bright + '.'
+            puts ' Phase 2/3 '.inverse + ' Your local ' + "release/#{release_tag}".bright + ' (formerly ' + 'develop'.bright + ') is live on ' + stag_app_name.to_s.bright + '.'
             puts '            Please test here: ' + (app['web_url']).to_s.bright
             puts '            If everything looks good, you may proceed and finish the release.'
             puts '            If there are problems: Quit, delete the release branch and start fixing.'
@@ -587,6 +593,7 @@ module Hu
             unbusy if opts[:spinner]
             color = (status.exitstatus == 0) ? :green : :red
             if status.exitstatus != 0 || !opts[:quiet]
+              print TTY::Cursor.clear_line + TTY::Cursor.show
               puts "\n> ".color(color) + line.color(:black).bright
               puts output
             end
