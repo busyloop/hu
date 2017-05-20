@@ -12,7 +12,9 @@ module Hu
           ram: 512,
           cpu: 1,
           dedicated: false,
-          usd: 0
+          usd: 0,
+          letter: 'f',
+          color: "\e[0;32;1m",
         },
         {
           id: 'hobby',
@@ -21,7 +23,9 @@ module Hu
           ram: 512,
           cpu: 1,
           dedicated: false,
-          usd: 7
+          usd: 7,
+          letter: 'H',
+          color: "\e[0;32m",
         },
         {
           id: 'standard-1x',
@@ -30,7 +34,9 @@ module Hu
           ram: 512,
           cpu: 1,
           dedicated: false,
-          usd: 25
+          usd: 25,
+          letter: '1',
+          color: "\e[0;33m",
         },
         {
           id: 'standard-2x',
@@ -39,7 +45,9 @@ module Hu
           ram: 1024,
           cpu: 4,
           dedicated: false,
-          usd: 50
+          usd: 50,
+          letter: '2',
+          color: "\e[0;33;1m",
         },
         {
           id: 'performance-m',
@@ -48,7 +56,9 @@ module Hu
           ram: 2560,
           cpu: 11,
           dedicated: true,
-          usd: 250
+          usd: 250,
+          letter: 'M',
+          color: "\e[0;31;1m",
         },
         {
           id: 'performance-l',
@@ -57,7 +67,9 @@ module Hu
           ram: 14_336,
           cpu: 46,
           dedicated: true,
-          usd: 500
+          usd: 500,
+          letter: 'L',
+          color: "\e[0;35;1m",
         }
       ].freeze
 
@@ -108,7 +120,7 @@ module Hu
         max_app_name_len = state.keys.reduce(0) { |a, e| [a, e.length].max }
         state.sort.each do |app_name, dyno_types|
           next if ignored_app?(app_name)
-          row = { 'app' => app_name, 'fH12ML' => '......', 'formation' => "heroku ps:scale -a #{app_name.ljust(max_app_name_len).color(:green).bright}" }
+          row = { 'app' => app_name, 'fH12ML' => '......', 'formation' => "\e[0mheroku ps:scale -a #{app_name.ljust(max_app_name_len).color(:green).bright}" }
           cost = 0
           dyno_types.each do |dyno_type, dynos|
             dynos.each do |dyno|
@@ -121,12 +133,18 @@ module Hu
               else
                 dyno_type_str = dyno_type_str.color(:yellow)
                 quant_colon_type = quant_colon_type.color(:yellow)
-                row['fH12ML'][DYNO_TYPES.find { |e| e[:id] == dyno_type }[:index]] = '*'
+                idx = DYNO_TYPES.find { |e| e[:id] == dyno_type }[:index]
+                row['fH12ML'][idx] = 'fH12ML'[idx]
               end
               row['formation'] += " #{dyno_type_str}" + '='.color(:black).bright + quant_colon_type.to_s
               cost += DYNO_TYPES.find { |e| e[:id] == dyno_type }[:usd] * dyno[:quantity]
             end
           end
+          new_row = ''.dup
+          row['fH12ML'].each_char do |l|
+            new_row << (DYNO_TYPES.find {|dt| dt[:letter] == l}[:color] + l + "\e[0;30;1m" rescue '.')
+          end
+          row['fH12ML'] = "\e[0;30;1m"+new_row
           total_cost += cost
           row['$/mo'] = format '%4d', cost
           rows << row
