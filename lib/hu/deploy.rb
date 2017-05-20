@@ -271,32 +271,37 @@ module Hu
             puts
           end
 
-          choice = prompt.select('>') do |menu|
-            menu.enum '.'
-            menu.choice 'Refresh', :refresh
-            menu.choice 'Quit', :abort_ask
-            unless git_revisions[:release] == git_revisions[stag_app_name] || !release_branch_exists
-              menu.choice "Push release/#{release_tag} to #{stag_app_name}", :push_to_staging
+          begin
+            choice = prompt.select('>') do |menu|
+              menu.enum '.'
+              menu.choice 'Refresh', :refresh
+              menu.choice 'Quit', :abort_ask
+              unless git_revisions[:release] == git_revisions[stag_app_name] || !release_branch_exists
+                menu.choice "Push release/#{release_tag} to #{stag_app_name}", :push_to_staging
+              end
+              if release_branch_exists
+                unless release_tag == tiny_bump
+                  menu.choice "Change to PATCH release (bugfix only)       #{highest_version} -> #{tiny_bump}", :bump_tiny
+                end
+
+                unless release_tag == minor_bump
+                  menu.choice "Change to MINOR release (new features)      #{highest_version} -> #{minor_bump}", :bump_minor
+                end
+
+                unless release_tag == major_bump
+                  menu.choice "Change to MAJOR release (breaking changes)  #{highest_version} -> #{major_bump}", :bump_major
+                end
+
+                if git_revisions[:release] == git_revisions[stag_app_name]
+                  menu.choice 'Finish release (merge, tag and final stage)', :finish_release
+                end
+              elsif git_revisions[prod_app_name] != git_revisions[stag_app_name]
+                menu.choice "DEPLOY (promote #{stag_app_name} to #{prod_app_name})", :DEPLOY
+              end
             end
-            if release_branch_exists
-              unless release_tag == tiny_bump
-                menu.choice "Change to PATCH release (bugfix only)       #{highest_version} -> #{tiny_bump}", :bump_tiny
-              end
-
-              unless release_tag == minor_bump
-                menu.choice "Change to MINOR release (new features)      #{highest_version} -> #{minor_bump}", :bump_minor
-              end
-
-              unless release_tag == major_bump
-                menu.choice "Change to MAJOR release (breaking changes)  #{highest_version} -> #{major_bump}", :bump_major
-              end
-
-              if git_revisions[:release] == git_revisions[stag_app_name]
-                menu.choice 'Finish release (merge, tag and final stage)', :finish_release
-              end
-            elsif git_revisions[prod_app_name] != git_revisions[stag_app_name]
-              menu.choice "DEPLOY (promote #{stag_app_name} to #{prod_app_name})", :DEPLOY
-            end
+          rescue TTY::Prompt::Reader::InputInterrupt
+            choice = :abort
+            puts "\n\n"
           end
 
           case choice
@@ -354,6 +359,8 @@ module Hu
             end
           when :refresh
             puts
+          when :abort
+            exit 0
           end
         end
       end
