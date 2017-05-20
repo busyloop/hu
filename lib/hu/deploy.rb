@@ -9,7 +9,7 @@ module Hu
 
       RELEASE_TYPE_HINT = {
         'patch' => 'only bugfixes',
-        'minor' => 'new features, fully backwards compatible',
+        'minor' => 'fully backwards compatible',
         'major' => 'not backwards compatible'
       }
 
