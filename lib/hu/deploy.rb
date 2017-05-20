@@ -789,7 +789,7 @@ module Hu
             puts
             puts 'develop is at ' + revs[:develop].bright + ", release/#{release_tag} is at " + revs[:release].bright + '.'
             puts
-            puts 'This usually means the release branch is old and does not'
+            puts 'This usually means the release branch is old and does'
             puts 'not reflect what you actually want to deploy right now.'
             puts
             choice = prompt.select('What shall we do?') do |menu|
