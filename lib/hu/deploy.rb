@@ -7,6 +7,12 @@ module Hu
       ::TTY::Formats::FORMATS[:hu] = { frames: '🌑🌒🌓🌔🌕🌖🌗🌘'.chars, interval: 10 }
       ::TTY::Formats::FORMATS[:huroku] = { frames: '⣷⣯⣟⡿⢿⣻⣽⣾'.chars, interval: 10 }
 
+      RELEASE_TYPE_HINT = {
+        'patch' => 'only bugfixes',
+        'minor' => 'new features, fully backwards compatible',
+        'major' => 'not backwards compatible'
+      }
+
       $stdout.sync
       @@shutting_down = false
       @@spinner = nil
@@ -213,8 +219,17 @@ module Hu
           changelog = 'Initial revision'
           release_branch_exists = branch_exists?("release/#{release_tag}")
 
+          case release_tag
+            when minor_bump
+              release_type = 'minor'
+            when major_bump
+              release_type = 'major'
+            else
+              release_type = 'patch'
+          end
+
           if release_branch_exists
-            puts "\nThis release will be " + release_tag.color(:green).bright
+            puts "\nThis will be "+"#{release_type} release ".bright+release_tag.color(:green).bright
             unless highest_version == 'v0.0.0'
               env = {
                 'PREVIOUS_TAG' => highest_version,
@@ -222,8 +237,8 @@ module Hu
               }
               changelog = create_changelog(env) unless highest_version == 'v0.0.0'
               unless changelog.empty?
-                puts "\nChanges since " + highest_version.bright + ':'
-                puts changelog
+                puts "\nChanges since " + highest_version.bright + " (#{RELEASE_TYPE_HINT[release_type]})".color(:black).bright
+                puts changelog.color(:green)
               end
             end
           else
@@ -256,7 +271,7 @@ module Hu
             puts
           end
 
-          choice = prompt.select('Choose your destiny') do |menu|
+          choice = prompt.select('>') do |menu|
             menu.enum '.'
             menu.choice 'Refresh', :refresh
             menu.choice 'Quit', :abort_ask
@@ -265,15 +280,15 @@ module Hu
             end
             if release_branch_exists
               unless release_tag == tiny_bump
-                menu.choice "Change to PATCH release (bugfix only)     : #{highest_version} -> #{tiny_bump}", :bump_tiny
+                menu.choice "Change to PATCH release (bugfix only)       #{highest_version} -> #{tiny_bump}", :bump_tiny
               end
 
               unless release_tag == minor_bump
-                menu.choice "Change to MINOR release (new features)    : #{highest_version} -> #{minor_bump}", :bump_minor
+                menu.choice "Change to MINOR release (new features)      #{highest_version} -> #{minor_bump}", :bump_minor
               end
 
               unless release_tag == major_bump
-                menu.choice "Change to MAJOR release (breaking changes): #{highest_version} -> #{major_bump}", :bump_major
+                menu.choice "Change to MAJOR release (breaking changes)  #{highest_version} -> #{major_bump}", :bump_major
               end
 
               if git_revisions[:release] == git_revisions[stag_app_name]
@@ -344,7 +359,7 @@ module Hu
       end
 
       def show_pipeline_status(pipeline_name, stag_app_name, prod_app_name, release_tag, clear = true)
-        table = TTY::Table.new header: %w(location commit tag app_last_modified app_last_modified_by dynos# state)
+        table = TTY::Table.new header: ['', 'commit', 'tag', 'last_modified', 'last_modified_by', 'dynos#', '']
         busy 'synchronizing', :huroku
         ts = []
         workers = []
@@ -455,7 +470,9 @@ module Hu
         # end
 
         puts "\e[H\e[2J" if clear
-        puts " PIPELINE #{pipeline_name} ".inverse + git_version_warning
+        puts " #{pipeline_name} ".bright.inverse + git_version_warning
+        # puts " #{pipeline_name} ".bright.inverse + ' '.color(:cyan).inverse + ' '.color(:blue).inverse + ' '.color(:black).bright.inverse + git_version_warning
+
         puts
 
         puts table.render(:unicode, padding: [0, 1, 0, 1], multiline: true)
@@ -470,7 +487,7 @@ module Hu
         unless missing_env.empty?
           puts
           missing_env.each do |var|
-            puts ' WARNING '.color(:red).bright.inverse + ' Missing config in ' + prod_app_name.bright + ": #{var}"
+            puts ' WARNING '.background(:red).color(:yellow).bright + ' Missing config in ' + prod_app_name.bright + ": #{var}"
             sleep 0.42
           end
         end
