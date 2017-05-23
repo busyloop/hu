@@ -214,6 +214,43 @@ module Hu
         clearscreen = true
         loop do
           git_revisions = show_pipeline_status(pipeline_name, stag_app_name, prod_app_name, release_tag, clearscreen)
+
+          if git_revisions[:develop] == `git rev-parse master`[0..5] && git_revisions[:develop] == git_revisions[prod_app_name] &&
+             git_revisions[prod_app_name] != git_revisions[stag_app_name]
+             puts
+             busy 'green green red green is not a legal state', :toggle
+             sleep 3
+             unbusy
+             puts <<-EOM
+\e[41;33;1m AMBIGUOUS STATE - CAN NOT DETERMINE PHASE OF OPERATION - YOUR REALITY IS INVALID \e[0;33m
+EOM
+sleep 1
+             puts <<-EOM
+
+ _____________
+( Woah, dude! )
+ -------------
+        \\   ^__^
+         \\  (oo)\\_______
+            (__)\\       )\\/\\
+                ||----w |
+                ||     ||
+\e[0m
+You have created a situation that hu can't understand.
+This is most likely due to a \e[1mheroku rollback\e[0m or \e[1mmanipulation of git history\e[0m.
+
+But don't be scared. Recovery is (normally) easy:
+\e[32;1m>>> \e[0mJust 'git commit' a new revision to your local \e[1mdevelop\e[0m branch.
+
+When hu sees that your develop branch is different from everything else
+then it can (normally) recover from there.
+
+\e[0m
+EOM
+            sleep 3
+            exit 6
+          end
+
           clearscreen = true
 
           changelog = 'Initial revision'
