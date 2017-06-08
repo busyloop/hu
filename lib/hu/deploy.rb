@@ -293,7 +293,7 @@ EOM
           if release_branch_exists && git_revisions[:release] == git_revisions[stag_app_name]
             puts ' Phase 2/3 '.inverse + ' Your local ' + "release/#{release_tag}".bright + ' (formerly ' + 'develop'.bright + ') is live on ' + stag_app_name.to_s.bright + '.'
             puts '            Please test here: ' + (app['web_url']).to_s.bright
-            puts '            If everything looks good, you may proceed and finish the release.'
+            puts '            If everything looks good you may proceed and finish the release.'
             puts '            If there are problems: Quit, delete the release branch and start fixing.'
             puts
           elsif git_revisions[prod_app_name] != git_revisions[stag_app_name] && !release_branch_exists && git_revisions[:release] != git_revisions[stag_app_name]
