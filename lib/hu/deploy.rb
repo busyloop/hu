@@ -416,7 +416,7 @@ EOM
         [[0, stag_app_name], [1, prod_app_name]].each do |idx, app_name|
           workers << Thread.new do
             # config vars
-            app_config[app_name] = h.config_var.info(app_name)
+            app_config[app_name] = h.config_var.info_for_app(app_name)
           end
 
           ts << Thread.new do
