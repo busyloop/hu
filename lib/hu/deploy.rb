@@ -403,7 +403,7 @@ EOM
       end
 
       def show_pipeline_status(pipeline_name, stag_app_name, prod_app_name, release_tag, clear = true)
-        table = TTY::Table.new header: ['', 'commit', 'tag', 'last_modified', 'last_modified_by', 'dynos#', '']
+        table = TTY::Table.new header: ['', 'commit', 'tag', 'last_modified', 'last_modified_by', 'dynos', '']
         busy 'synchronizing', :huroku
         ts = []
         workers = []
@@ -428,7 +428,19 @@ EOM
               break if dynos.nil?
               dp :dynos, dynos
 
-              table_row[5] = dynos.length
+              formation = h.formation.list(app_name)
+
+              formation_stats = {}
+              formation.each do |o|
+                formation_stats[o['size']] ||= 0
+                formation_stats[o['size']] += o['quantity']
+              end
+              table_row[5] = formation_stats.map{|k,v|
+                                  next if 0 == v; "\e[1m#{v}×#{dt = Hu::Cli::Scale::DYNO_TYPES.find { |e| e[:id] == k.downcase }
+                                  suffix = ""
+                                  suffix = "\e[30;1m free" if dt[:id] == 'free'
+                                  "\e[0m" + (dt[:ram]/1024.0).to_s}G"+suffix
+                             }.compact.join(', ')
 
               release_version = dynos.dig(0, 'release', 'version')
               break if release_version.nil?
@@ -465,7 +477,6 @@ EOM
               # table_row[3] += "\n\e[30;1m" + slug_info['updated_at']
 
               table_row[4] = release_info['user']['email']
-              table_row[5] = dynos.length
               break
             end
             [idx, table_row]
