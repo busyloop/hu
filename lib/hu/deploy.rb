@@ -963,7 +963,7 @@ EOM
           env.each { |k, v| ENV[k] = v }
           `.hu/hooks/changelog`
         else
-          `git log --pretty=format:" - %s" #{env['PREVIOUS_TAG']}..HEAD 2>/dev/null`
+          `git log --pretty=format:" - %h %s (%an)" #{env['PREVIOUS_TAG']}..HEAD 2>/dev/null`
         end
       end
 
