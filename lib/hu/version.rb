@@ -1,4 +1,4 @@
 # frozen_string_literal: true
 module Hu
-  VERSION = '1.5.17'
+  VERSION = '1.6.0'
 end
