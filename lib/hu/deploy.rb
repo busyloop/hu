@@ -357,7 +357,7 @@ EOM
               'RELEASE_TAG'  => release_tag,
               'GIT_MERGE_AUTOEDIT' => 'no'
             }
-            unless 0 == finish_release(release_tag, env)
+            unless 0 == finish_release(release_tag, env, tf.path)
               abort_merge
               puts '*** ERROR! Could not finish release *** '.color(:red)
               puts
@@ -404,7 +404,7 @@ EOM
 
       def show_pipeline_status(pipeline_name, stag_app_name, prod_app_name, release_tag, clear = true)
         table = TTY::Table.new header: ['', 'commit', 'tag', 'last_modified', 'last_modified_by', 'dynos', '']
-        busy 'synchronizing', :huroku
+        busy 'synchronizing', :dots
         ts = []
         workers = []
         tpl_row = ['?', '', '', '', '', '', '']
@@ -892,7 +892,7 @@ EOM
         EOS
       end
 
-      def finish_release(release_tag, env)
+      def finish_release(release_tag, env, changelog_path)
         env.each { |k, v| ENV[k] = v }
         if File.executable? '.hu/hooks/pre_release'
           run_each <<-EOS.strip_heredoc
@@ -906,6 +906,11 @@ EOM
         :return
         # Finish release
         git flow release finish #{release_tag}
+
+        # Adjust merge message
+        git checkout master
+        git commit --amend -F #{changelog_path}
+        git tag -f #{release_tag}
 
         # Push final master (#{release_tag}) to origin
         git push origin master
