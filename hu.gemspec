@@ -31,9 +31,9 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'hashdiff', '~> 0.3.0'
   spec.add_dependency 'version_sorter', '~> 2.2.0'
   spec.add_dependency 'versionomy', '~> 0.5.0'
-  spec.add_dependency 'tty-prompt', '= 0.6.0'
+  spec.add_dependency 'tty-prompt', '~> 0.13.2'
   spec.add_dependency 'tty-spinner', '= 0.3.0'
-  spec.add_dependency 'tty-table', '= 0.6.0'
+  spec.add_dependency 'tty-table', '~> 0.9.0'
   spec.add_dependency 'tty-cursor'
   spec.add_dependency 'rainbow'
   spec.add_dependency 'netrc', '= 0.11.0'
@@ -44,4 +44,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'lolcat'
   spec.add_dependency 'config'
   spec.add_dependency 'awesome_print'
+  spec.add_dependency 'necromancer', '~> 0.4.0'
 end
