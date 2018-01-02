@@ -425,6 +425,7 @@ EOM
             table_row[0] = app_name
             loop do
               dynos = h.dyno.list(app_name)
+              table_row[6] = "\e[31;1moffline\e[0m"
               break if dynos.nil?
               dp :dynos, dynos
 
@@ -997,6 +998,10 @@ EOM
       end
 
       def anykey
+        unless ENV['HU_ANYKEY']
+          puts
+          return
+        end
         puts TTY::Cursor.hide
         print '--- Press any key ---'.color(:cyan)
         STDIN.getch
