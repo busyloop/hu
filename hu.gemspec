@@ -24,7 +24,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rake'
   spec.add_development_dependency 'bump'
 
-  spec.add_dependency 'optix', '~> 1.2.4'
+  spec.add_dependency 'optix', '~> 2.0.0'
   spec.add_dependency 'blackbox', '~> 4.0.2'
   spec.add_dependency 'platform-api', '~> 2.1.0'
   spec.add_dependency 'powerbar', '>= 1.0.16'
