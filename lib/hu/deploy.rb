@@ -696,6 +696,7 @@ EOM
           begin
                                                  # yes, this is really how rubocop
                                                  # wants to format this... *shrug*
+                                                 next true if e.length < 4
                                                  Versionomy.parse(e)
                                                  false
                                                rescue
