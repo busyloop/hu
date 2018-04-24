@@ -557,6 +557,14 @@ EOM
         unbusy
         raise "FATAL: Found multiple heroku apps with git_url=#{git_url}" if r.length > 1
         r[0]
+      rescue Excon::Error::Unauthorized
+        unbusy
+        puts "ERROR: Heroku Access Denied".color(:red)
+        puts
+        puts "       Most likely your local credentials have expired."
+        puts "       Please run 'heroku login'."
+        puts
+        exit 1
       end
 
       def heroku_pipeline_details(app)
