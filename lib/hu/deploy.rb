@@ -219,14 +219,14 @@ module Hu
              git_revisions[prod_app_name] != git_revisions[stag_app_name]
              puts
              busy 'green green red green is not a legal state', :toggle
-             sleep 3
+             sleep 1
              unbusy
              puts <<-EOM
 \e[41;33;1m AMBIGUOUS STATE - CAN NOT DETERMINE PHASE OF OPERATION - YOUR REALITY IS INVALID \e[0;33m
+
 EOM
 sleep 1
-             puts <<-EOM
-
+puts <<-EOM
  _____________
 ( Woah, dude! )
  -------------
@@ -239,15 +239,18 @@ sleep 1
 You have created a situation that hu can't understand.
 This is most likely due to a \e[1mheroku rollback\e[0m or \e[1mmanipulation of git history\e[0m.
 
-But don't be scared. Recovery is (normally) easy:
-\e[32;1m>>> \e[0mJust 'git commit' a new revision to your local \e[1mdevelop\e[0m branch.
+But don't be afraid!  Recovery is (usually) easy:
+\e[32;1m>>> \e[0m 'git commit' a new revision to your local \e[1mdevelop\e[0m branch.
 
 When hu sees that your develop branch is different from everything else
-then it can (normally) recover from there.
-
+then it can (usually) recover from there.
 \e[0m
 EOM
-            sleep 3
+            printf "\e[13A\e[32C\033]1337;RequestAttention=fireworks\a"
+            printf TTY::Cursor.hide
+            sleep 2
+            puts "\e[12B"
+            printf TTY::Cursor.show
             exit 6
           end
 
@@ -291,16 +294,22 @@ EOM
           end
 
           if release_branch_exists && git_revisions[:release] == git_revisions[stag_app_name]
+            hyperlink = "\e]8;;#{app['web_url']}\007#{app['web_url']}\e]8;;\007"
+
             puts ' Phase 2/3 '.inverse + ' Your local ' + "release/#{release_tag}".bright + ' (formerly ' + 'develop'.bright + ') is live on ' + stag_app_name.to_s.bright + '.'
-            puts '            Please test here: ' + (app['web_url']).to_s.bright
+            puts
+            puts '            Please test here: ' + hyperlink.bright
+            puts
             puts '            If everything looks good you may proceed and finish the release.'
             puts '            If there are problems: Quit, delete the release branch and start fixing.'
             puts
           elsif git_revisions[prod_app_name] != git_revisions[stag_app_name] && !release_branch_exists && git_revisions[:release] != git_revisions[stag_app_name]
+            hyperlink = "\e]8;;#{app['web_url']}\007#{app['web_url']}\e]8;;\007"
+
             puts ' Phase 3/3 '.inverse + ' HEADS UP! This is the last chance to detect problems.'
             puts '            The final version of ' + "release/#{release_tag}".bright + ' is now staged.'
             puts
-            puts '            Test here: ' + (app['web_url']).to_s.bright
+            puts '            Test here: ' + hyperlink.bright
             sleep 1
             puts
             puts '            This is the exact version that will be promoted to production.'
