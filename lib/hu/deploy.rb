@@ -7,10 +7,25 @@ module Hu
       ::TTY::Formats::FORMATS[:hu] = { frames: '🌑🌒🌓🌔🌕🌖🌗🌘'.chars, interval: 10 }
       ::TTY::Formats::FORMATS[:huroku] = { frames: '⣷⣯⣟⡿⢿⣻⣽⣾'.chars, interval: 10 }
 
+      class SigQuit < StandardError; end
+
       RELEASE_TYPE_HINT = {
         'patch' => 'only bugfixes',
         'minor' => 'fully backwards compatible',
         'major' => 'not backwards compatible'
+      }
+
+      NUMBERS = {
+        0 => 'Zero',
+        1 => 'One',
+        2 => 'Two',
+        3 => 'Three',
+        4 => 'Four',
+        5 => 'Five',
+        6 => 'Six',
+        7 => 'Seven',
+        8 => 'Eight',
+        9 => 'Nine'
       }
 
       $stdout.sync
@@ -27,48 +42,57 @@ module Hu
         text "\e[1mWARNING: Environment variable 'HEROKU_API_KEY' must be set.\e[0m"
       end
       filter do
-        if Hu::API_TOKEN.nil?
-          STDERR.puts "\e[0;31;1mERROR: Environment variable 'HEROKU_API_KEY' must be set.\e[0m"
+        begin
+          if Hu::API_TOKEN.nil?
+            STDERR.puts "\e[0;31;1mERROR: Environment variable 'HEROKU_API_KEY' must be set.\e[0m"
+            exit 1
+          end
+          require 'tty-cursor'
+          print TTY::Cursor.hide + "\e[30;1ms"
+          require 'rainbow'
+          print 'y'
+          require 'rainbow/ext/string'
+          print 'n'
+          require 'platform-api'
+          print 'c'
+          require 'version_sorter'
+          print 'h'
+          require 'versionomy'
+          print 'r'
+          require 'tty-prompt'
+          print 'o'
+          require 'tty-table'
+          require 'octokit'
+          print 'n'
+          require 'open3'
+          require 'fidget'
+          print 'i'
+          require 'json'
+          require 'awesome_print'
+          print 'z'
+          require 'chronic_duration'
+          require 'tempfile'
+          print 'i'
+          require 'thread_safe'
+          require 'io/console'
+          print 'n'
+          require 'rugged'
+          require 'pty'
+          print 'g'
+          require 'thread'
+          require 'paint'
+          require 'lolcat/lol'
+          require 'io/console'
+        rescue Interrupt
+          puts "\e[0m*** Abort (SIGINT)"
+          puts TTY::Cursor.show
           exit 1
         end
-        require 'tty-cursor'
-        print TTY::Cursor.hide + "\e[30;1ms"
-        require 'rainbow'
-        print 'y'
-        require 'rainbow/ext/string'
-        print 'n'
-        require 'platform-api'
-        print 'c'
-        require 'version_sorter'
-        print 'h'
-        require 'versionomy'
-        print 'r'
-        require 'tty-prompt'
-        print 'o'
-        require 'tty-table'
-        print 'n'
-        require 'open3'
-        print 'i'
-        require 'json'
-        require 'awesome_print'
-        print 'z'
-        require 'chronic_duration'
-        require 'tempfile'
-        print 'i'
-        require 'thread_safe'
-        require 'io/console'
-        print 'n'
-        require 'rugged'
-        require 'pty'
-        print 'g'
-        require 'thread'
-        require 'paint'
-        require 'lolcat/lol'
-        require 'io/console'
       end
 
       def deploy(_cmd, _opts, _argv)
         trap('INT') { shutdown; puts "\e[0m\e[35;1m^C\e[0m"; exit 1 }
+
         at_exit do
           if $!.class == SystemExit && 130 == $!.status
             puts "\n\n"
@@ -287,7 +311,7 @@ EOM
           puts
 
           unless git_revisions[:release] == git_revisions[stag_app_name] || !release_branch_exists
-            puts ' Phase 1/3 '.inverse + ' The local release branch ' + "release/#{release_tag}".bright + ' was created.'
+            puts ' Phase 1/2 '.inverse + ' The local release branch ' + "release/#{release_tag}".bright + ' was created.'
             puts '            Nothing else has happened so far. Push this branch to'
             puts '            ' + stag_app_name.to_s.bright + ' to begin the deploy procedure.'
             puts
@@ -296,24 +320,25 @@ EOM
           if release_branch_exists && git_revisions[:release] == git_revisions[stag_app_name]
             hyperlink = "\e]8;;#{app['web_url']}\007#{app['web_url']}\e]8;;\007"
 
-            puts ' Phase 2/3 '.inverse + ' Your local ' + "release/#{release_tag}".bright + ' (formerly ' + 'develop'.bright + ') is live on ' + stag_app_name.to_s.bright + '.'
+            puts ' Phase 2/2 '.inverse + ' Your local ' + "release/#{release_tag}".bright + ' (formerly ' + 'develop'.bright + ') is live on ' + stag_app_name.to_s.bright + '.'
             puts
             puts '            Please test here: ' + hyperlink.bright
             puts
-            puts '            If everything looks good you may proceed and finish the release.'
+            puts '            If everything looks good you may proceed and deploy to production.'
             puts '            If there are problems: Quit, delete the release branch and start fixing.'
             puts
           elsif git_revisions[prod_app_name] != git_revisions[stag_app_name] && !release_branch_exists && git_revisions[:release] != git_revisions[stag_app_name]
             hyperlink = "\e]8;;#{app['web_url']}\007#{app['web_url']}\e]8;;\007"
 
-            puts ' Phase 3/3 '.inverse + ' HEADS UP! This is the last chance to detect problems.'
-            puts '            The final version of ' + "release/#{release_tag}".bright + ' is now staged.'
+            puts ' DEPLOY '.inverse + '  HEADS UP! This is the last chance to detect problems.'.bright
+            puts '          The final version of ' + "release/#{release_tag}".bright + ' is staged.'
             puts
-            puts '            Test here: ' + hyperlink.bright
-            sleep 1
+            puts '          Test here: ' + hyperlink.bright
+            sleep 0.1
             puts
-            puts '            This is the exact version that will be promoted to production.'
-            puts "            From here you are on your own. Good luck #{`whoami`.chomp}!"
+            puts '          This is the exact version that will be promoted to production.'
+            type "          From here you are on your own. Good luck #{`whoami`.chomp}!"
+            puts
             puts
           end
 
@@ -323,7 +348,7 @@ EOM
               menu.choice 'Refresh', :refresh
               menu.choice 'Quit', :abort_ask
               unless git_revisions[:release] == git_revisions[stag_app_name] || !release_branch_exists
-                menu.choice "Push release/#{release_tag} to #{stag_app_name}", :push_to_staging
+                menu.choice "Push develop to origin/develop and release/#{release_tag} to #{stag_app_name}", :push_to_staging
               end
               if release_branch_exists
                 unless release_tag == tiny_bump
@@ -339,54 +364,147 @@ EOM
                 end
 
                 if git_revisions[:release] == git_revisions[stag_app_name]
-                  menu.choice 'Finish release (merge, tag and final stage)', :finish_release
+                  menu.choice "DEPLOY to #{prod_app_name}", :finish_release
                 end
               elsif git_revisions[prod_app_name] != git_revisions[stag_app_name]
                 menu.choice "DEPLOY (promote #{stag_app_name} to #{prod_app_name})", :DEPLOY
               end
             end
-          rescue TTY::Prompt::Reader::InputInterrupt
+          rescue TTY::Reader::InputInterrupt
             choice = :abort
             puts "\n\n"
           end
 
           case choice
           when :DEPLOY
-            promote_to_production
+            Fidget.prevent_sleep(:display, :sleep, :user) do
+              promote_to_production
+            end
             anykey
           when :finish_release
-            old_editor = ENV['EDITOR']
-            old_git_editor = ENV['GIT_EDITOR']
-            tf = Tempfile.new('hu-tag')
-            tf.write "#{release_tag}\n#{changelog}"
-            tf.close
-            ENV['EDITOR'] = ENV['GIT_EDITOR'] = "cp #{tf.path}"
-            env = {
-              'PREVIOUS_TAG' => highest_version,
-              'RELEASE_TAG'  => release_tag,
-              'GIT_MERGE_AUTOEDIT' => 'no'
-            }
-            unless 0 == finish_release(release_tag, env, tf.path)
-              abort_merge
-              puts '*** ERROR! Could not finish release *** '.color(:red)
-              puts
-              puts 'This usually means a merge conflict or'
-              puts 'something equally annoying has occured.'
-              puts
-              puts 'Please bring the universe into a state'
-              puts 'where the above sequence of commands can'
-              puts 'succeed. Then try again.'
-              puts
-              exit 1
+            Fidget.prevent_sleep(:display, :sleep, :user) do
+              if ci_clear?
+                old_editor = ENV['EDITOR']
+                old_git_editor = ENV['GIT_EDITOR']
+                tf = Tempfile.new('hu-tag')
+                tf.write "#{release_tag}\n#{changelog}"
+                tf.close
+                ENV['EDITOR'] = ENV['GIT_EDITOR'] = "cp #{tf.path}"
+                env = {
+                  'PREVIOUS_TAG' => highest_version,
+                  'RELEASE_TAG'  => release_tag,
+                  'GIT_MERGE_AUTOEDIT' => 'no'
+                }
+                unless 0 == finish_release(release_tag, env, tf.path)
+                  abort_merge
+                  puts '*** ERROR! Could not finish release *** '.color(:red)
+                  puts
+                  puts 'This usually means a merge conflict or'
+                  puts 'something equally annoying has occured.'
+                  puts
+                  puts 'Please bring the universe into a state'
+                  puts 'where the above sequence of commands can'
+                  puts 'succeed. Then try again.'
+                  puts
+                  exit 1
+                end
+                ENV['EDITOR'] = old_editor
+                ENV['GIT_EDITOR'] = old_git_editor
+
+                promote_to_production
+                promoted_at = Time.now.to_i
+
+                formation = h.formation.info(prod_app_name, 'web')
+                dyno_count = formation['quantity']
+
+                phase = :init
+                want = dyno_count
+                have = 0
+                release_rev = `git rev-parse develop`[0..7]
+                parser = Proc.new do |line, pid|
+                  source, line = line.chomp.split(' ', 2)[1].split(' ', 2)
+                  source = /\[(.*)\]:/.match(source)[1]
+                  prefix = "\e[0m"
+                  case phase
+                  when :init
+                    if line =~ /Deploy #{release_rev}/
+                      phase = :observe
+                    end
+                  when :observe
+                    if line =~ /State changed from starting to crashed/
+                      prefix = "\e[31;1m"
+                    elsif line =~ /State changed from starting to up/
+                      prefix = "\e[32;1m"
+                      have += 1
+                    end
+
+                    t = Time.now.to_i - promoted_at
+                    ts = sprintf("%02d:%02d", t / 60, t % 60)
+                    print "\e[30;1m[\e[0;33mT+#{ts} #{prefix}#{have}\e[0m/#{prefix}#{want}\e[30;1m] \e[0m"
+                    print "#{source}: " unless source == 'api'
+                    print prefix + line
+                    puts
+
+                    if have >= want
+                      Process.kill("TERM", pid)
+                    end
+                  end
+                end
+
+                puts
+                puts "\e[0;1m# Observe startup\e[0m"
+                if h.app_feature.info(prod_app_name, 'preboot').dig('enabled')
+                  puts <<EOF
+#
+# \e[0m\e]8;;https://devcenter.heroku.com/articles/preboot\007Preboot\e]8;;\007 is \e[32;1menabled\e[0m for \e[1m#{prod_app_name}\e[0m.
+#
+# #{NUMBERS[formation['quantity']] || formation['quantity']} new dyno#{formation['quantity'] == 1 ? '' : 's'} (\e[1m#{formation['size']}\e[0m) #{formation['quantity'] == 1 ? 'is' : 'are'} starting up.
+# The old dynos will shut down within 3 minutes.
+EOF
+                end
+
+                script = <<-EOS.strip_heredoc
+                :stream
+                :quiet
+                :failquiet
+                :nospinner
+                :return
+                heroku logs --tail -a #{prod_app_name} | grep -E "heroku\\[|app\\[api\\]"
+                EOS
+
+                sigint_handler = Proc.new do
+                  puts
+                  print TTY::Cursor.up + TTY::Cursor.clear_line + TTY::Cursor.show
+
+                  puts
+                  puts "\e[43m  \e[0m \e[0;32mRelease \e[1m#{release_tag}\e[0;32m is being launched on \e[1m#{prod_app_name}\e[0;32m\e[0m \e[43m  \e[0m"
+                  puts
+
+                  shutdown
+
+                  exit 0
+                end
+
+                run_each(script, parser: parser, sigint_handler: sigint_handler)
+
+                puts
+                print"\a"; sleep 0.4
+                puts "\e[42m  \e[0m \e[0;32mRelease \e[1m#{release_tag}\e[0;32m has been deployed to \e[1m#{prod_app_name}\e[0;32m\e[0m \e[42m  \e[0m"
+                print"\a"; sleep 0.4
+                puts
+                print"\a"; sleep 0.4
+
+                exit 0
+              end
             end
-            ENV['EDITOR'] = old_editor
-            ENV['GIT_EDITOR'] = old_git_editor
-            anykey
           when :push_to_staging
-            run_each <<-EOS.strip_heredoc
-              :stream
-              git push #{push_url} release/#{release_tag}:master -f
-              EOS
+            Fidget.prevent_sleep(:display, :sleep, :user) do
+              run_each <<-EOS.strip_heredoc
+                :stream
+                git push origin develop
+                git push #{push_url} release/#{release_tag}:master -f
+                EOS
+            end
             anykey
           when :abort_ask
             puts if delete_branch("release/#{release_tag}")
@@ -409,6 +527,169 @@ EOM
             exit 0
           end
         end
+      end
+
+      def type(text, delay=0.01)
+        text.chars.each do |c|
+          print c
+          sleep rand * delay unless c == ' '
+        end
+      end
+
+      def ci_info
+        puts
+        if ENV['HU_GITHUB_ACCESS_TOKEN'].nil?
+          msg = "ERROR: Environment variable 'HU_GITHUB_ACCESS_TOKEN' must be set."
+        else
+          msg = 'ERROR: Github access token is invalid or has insufficient permissions'
+        end
+        puts msg.color(:red)
+        puts <<EOF
+
+       1. Go to \e]8;;https://github.com/settings/tokens\007https://github.com/settings/tokens\e]8;;\007
+
+       2. Click on [Generate new token]
+
+       3. Create a token with (only) the following permissions:
+
+          - repo:status
+          - repo_deployment
+          - public_repo
+          - read:user
+
+       4. Add the following line to your shell environment (e.g. ~/.bash_profile):
+
+          \e[1mexport HU_GITHUB_ACCESS_TOKEN=<your_token>\e[0m
+
+EOF
+      end
+
+      def ci_status(release_branch_exists=true)
+        okit = Octokit::Client.new(access_token: ENV['HU_GITHUB_ACCESS_TOKEN'])
+
+        repo_name = @git.remotes['origin'].url.split(':')[1].gsub('.git', '')
+
+        begin
+          raw_status_develop = status_develop = okit.status(repo_name, @git.branches["origin/develop"].target_id)
+          status_develop = status_develop[:statuses].empty? ? ' ' : status_develop[:state]
+          status_develop = ' ' if @git.branches["origin/develop"].target_id != @git.branches["develop"].target_id
+          status_develop = ' ' unless release_branch_exists
+        rescue Octokit::NotFound, Octokit::Unauthorized
+          return :error
+        end
+
+        begin
+          # status_master = okit.status(repo_name, @git.branches["origin/master"].target_id)
+          # p status_master
+          # status_master = status_master[:statuses].empty? ? 'n/a' : status_master[:state]
+          # status_master = ' ' if @git.branches["origin/master"].target_id != @git.branches["master"].target_id
+          status_master = ' '
+        rescue Octokit::NotFound
+          status_master = 'unknown'
+        end
+
+        {
+          master: status_master,
+          develop: status_develop,
+          raw_develop: raw_status_develop
+        }
+      end
+
+      def ci_symbol(value)
+        case value
+        when ' '
+          ''
+        when 'pending'
+          ' 🐌'
+        when 'success'
+          ' ✅'
+        else
+          ' ❌'
+        end
+      end
+
+      def ci_clear?
+        return true if ENV['HU_GITHUB_ACCESS_TOKEN'].nil?
+        msg = ''
+        prefix = "CI: "
+        ci_develop = ''
+        begin_wait_at = Time.now - 1
+        i = 0
+        puts
+        Signal.trap('QUIT') { raise SigQuit }
+        Signal.trap('INT') { raise Interrupt }
+        while ci_develop != 'success' do
+          puts
+          print TTY::Cursor.up + TTY::Cursor.clear_line + TTY::Cursor.hide
+          print prefix
+          print ('-' * (ci_develop.length + 2)) unless i == 0
+          print msg unless i == 0
+          ci_develop = ci_status(true)[:develop] if i % 10 == 0
+          # ci_develop = 'failed'
+
+          puts
+          print TTY::Cursor.up + TTY::Cursor.clear_line + TTY::Cursor.show
+
+          print TTY::Cursor.hide + "\n" + TTY::Cursor.up
+          msg = " - press ^\\ to override, ^C to abort (#{ChronicDuration.output((Time.now - begin_wait_at).to_i, format: :short)}) "
+
+          status = ci_develop.upcase
+          case status
+          when 'PENDING'
+            status = "\e[44;33;1m PENDING \e[0m"
+          when 'SUCCESS'
+            status = "\e[42;30;1m CLEAR \e[0m"
+          when ' '
+            status = "\e[40;30;1m UNCONFIGURED \e[0m"
+          else
+            status = "\e[41;33;1m #{status} \e[0m"
+          end
+          print prefix + status
+          print msg unless ci_develop == 'success' || ci_develop == ' '
+
+          # key = nil
+
+          sleep 1
+
+          break if ci_develop == ' '
+          # catch :sigint do
+          #   begin
+          #     Timeout::timeout(1) do
+          #       Signal.trap('INT') { throw :sigint }
+          #       key = STDIN.getch
+          #     end
+          #   rescue Timeout::Error
+          #     key = :timeout
+          #   ensure
+          #     Signal.trap('INT', 'DEFAULT')
+          #   end
+          # end
+          # if key == "\u0003"
+          #   puts
+          #   print TTY::Cursor.up + TTY::Cursor.clear_line + TTY::Cursor.show
+          #   return false
+          # end
+
+          i += 1
+        end
+        puts
+        print TTY::Cursor.up + TTY::Cursor.clear_line + TTY::Cursor.show
+        print TTY::Cursor.up
+        return true
+        rescue Interrupt
+          puts
+          print TTY::Cursor.up + TTY::Cursor.clear_line + TTY::Cursor.show
+          return false
+        rescue SigQuit
+          puts
+          print TTY::Cursor.up + TTY::Cursor.clear_line + TTY::Cursor.show
+          puts "CI: \e[41;33;1m OVERRIDE \e[0m"
+          return true
+        ensure
+          Signal.trap('QUIT', 'DEFAULT')
+          Signal.trap('INT', 'DEFAULT')
+          puts
+          print TTY::Cursor.up + TTY::Cursor.clear_line + TTY::Cursor.show
       end
 
       def show_pipeline_status(pipeline_name, stag_app_name, prod_app_name, release_tag, clear = true)
@@ -493,6 +774,17 @@ EOM
           end
         end
 
+        ci = Thread.new do
+          ci_status(branch_exists?("release/#{release_tag}"))
+        end
+
+        ci = ci.value
+        if ci == :error
+          unbusy
+          ci_info
+          exit 1
+        end
+
         workers.each(&:join)
 
         rows = []
@@ -506,6 +798,7 @@ EOM
         revs[:master] = row[1] = `git rev-parse master`[0..5]
         row[2] = `git tag --points-at master`
         row[1] = row[1].color(row[1] == revs[:develop] ? :green : :red)
+        # row[3] = color_ci(ci[:master])
         rows.unshift row
 
         if branch_exists? "release/#{release_tag}"
@@ -518,9 +811,18 @@ EOM
         end
 
         row = tpl_row.dup
+        row[0] = 'origin/develop'
+        row[1] = `git rev-parse origin/develop`[0..5]
+        row[1] = row[1].color(row[1] == revs[:develop] ? :green : :red) + ci_symbol(ci[:develop])
+        row[2] = `git tag --points-at origin/develop`
+        # row[3] = color_ci(ci[:develop])
+        rows.unshift row
+
+        row = tpl_row.dup
         row[0] = 'develop'
         row[1] = revs[:develop].color(:green)
         row[2] = `git tag --points-at develop`
+        # row[3] = color_ci(ci[:develop]) if
         rows.unshift row
 
         unbusy
@@ -557,7 +859,24 @@ EOM
           end
         end
 
+        # p ci
+        if ci[:develop] != ' '
+          ci[:raw_develop][:statuses].each do |status|
+            if ['failure', 'error'].include? status[:state]
+              puts
+              print " CI #{status[:state].upcase} ".background(:red).color(:yellow).bright
+              print " \033]1337;RequestAttention=fireworks\a"
+              sleep 1
+              puts "#{status[:description]}".bright
+              puts "      " + (" " * status[:state].length) + status[:target_url]
+            end
+          end
+        end
+
         revs
+      rescue Interrupt
+        puts "*** Abort"
+        exit 1
       end
 
       def heroku_app_by_git(git_url)
@@ -603,9 +922,13 @@ EOM
         opts = {
           quiet: false,
           failfast: true,
+          failquiet: false,
           spinner: true,
-          stream: false
+          stream: false,
+          parser: nil
         }.merge(opts)
+
+        parser = opts[:parser]
 
         @spinlock ||= Mutex.new # :P
         script.lines.each_with_index do |line, i|
@@ -616,6 +939,7 @@ EOM
           when ':'
             opts[:quiet] = true if line == ':quiet'
             opts[:failfast] = false if line == ':return'
+            opts[:failquiet] = true if line == ':failquiet'
             opts[:spinner]  = false if line == ':nospinner'
             if line == ':stream'
               opts[:stream] = true
@@ -633,7 +957,7 @@ EOM
             @tspin ||= Thread.new do
               i = 0
               loop do
-                break if @minispin_last_char_at == :end
+                break if @minispin_last_char_at == :end || @shutdown
                 begin
                   if 0.23 > Time.now - @minispin_last_char_at || @minispin_disable
                     sleep 0.1
@@ -658,10 +982,17 @@ EOM
 
             PTY.spawn("stty rows #{rows} cols #{cols}; " + line) do |r, _w, pid|
               begin
+                l = ''
                 until r.eof?
                   c = r.getc
                   @spinlock.synchronize do
-                    print c
+                    print c unless opts[:quiet]
+                    if c == "\n" && parser
+                      parser.call(l, pid)
+                      l = ''
+                    else
+                      l += c
+                    end
                     @minispin_last_char_at = Time.now
                     c = c.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: "\e") # barf.
                     # hold on when we are (likely) inside an escape sequence
@@ -673,6 +1004,14 @@ EOM
                 # Linux raises EIO on EOF, cf.
                 # https://github.com/ruby/ruby/blob/57fb2199059cb55b632d093c2e64c8a3c60acfbb/ext/pty/pty.c#L519
                 nil
+              rescue Interrupt
+                if opts[:sigint_handler]
+                  opts[:sigint_handler].call
+                else
+                  puts
+                  puts "*** Abort (SIGINT)"
+                  exit 1
+                end
               end
 
               _pid, status = Process.wait2(pid)
@@ -694,7 +1033,7 @@ EOM
           end
           next unless status.exitstatus != 0
           shutdown if opts[:failfast]
-          puts "Error, exit #{status.exitstatus}: #{line} (L#{i})".color(:red).bright
+          puts "Error, exit #{status.exitstatus}: #{line} (L#{i})".color(:red).bright unless opts[:failquiet]
 
           exit status.exitstatus if opts[:failfast]
           return status.exitstatus
@@ -734,7 +1073,11 @@ EOM
 
       def delete_branch(branch_name)
         return false unless branch_exists? branch_name
-        return false if TTY::Prompt.new.no?("Delete branch #{branch_name}?")
+        begin
+          return false if TTY::Prompt.new.no?("Delete branch #{branch_name}?")
+        rescue TTY::Reader::InputInterrupt
+          return false
+        end
         run_each <<-EOS.strip_heredoc
           :quiet
           # Delete branch #{branch_name}
@@ -1015,8 +1358,8 @@ EOM
         unbusy
       end
 
-      def anykey
-        unless ENV['HU_ANYKEY']
+      def anykey(force=false)
+        unless ENV['HU_ANYKEY'] || force
           puts
           return
         end
