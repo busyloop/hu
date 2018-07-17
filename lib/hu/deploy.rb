@@ -422,32 +422,35 @@ EOM
                 have = 0
                 release_rev = `git rev-parse develop`[0..7]
                 parser = Proc.new do |line, pid|
-                  source, line = line.chomp.split(' ', 2)[1].split(' ', 2)
-                  source = /\[(.*)\]:/.match(source)[1]
-                  prefix = "\e[0m"
-                  case phase
-                  when :init
-                    if line =~ /Deploy #{release_rev}/
-                      phase = :observe
-                    end
-                  when :observe
-                    if line =~ /State changed from starting to crashed/
-                      prefix = "\e[31;1m"
-                    elsif line =~ /State changed from starting to up/
-                      prefix = "\e[32;1m"
-                      have += 1
-                    end
+                  begin
+                    source, line = line.chomp.split(' ', 2)[1].split(' ', 2)
+                    source = /\[(.*)\]:/.match(source)[1]
+                    prefix = "\e[0m"
+                    case phase
+                    when :init
+                      if line =~ /Deploy #{release_rev}/
+                        phase = :observe
+                      end
+                    when :observe
+                      if line =~ /State changed from starting to crashed/
+                        prefix = "\e[31;1m"
+                      elsif line =~ /State changed from starting to up/
+                        prefix = "\e[32;1m"
+                        have += 1
+                      end
 
-                    t = Time.now.to_i - promoted_at
-                    ts = sprintf("%02d:%02d", t / 60, t % 60)
-                    print "\e[30;1m[\e[0;33mT+#{ts} #{prefix}#{have}\e[0m/#{prefix}#{want}\e[30;1m] \e[0m"
-                    print "#{source}: " unless source == 'api'
-                    print prefix + line
-                    puts
+                      t = Time.now.to_i - promoted_at
+                      ts = sprintf("%02d:%02d", t / 60, t % 60)
+                      print "\e[30;1m[\e[0;33mT+#{ts} #{prefix}#{have}\e[0m/#{prefix}#{want}\e[30;1m] \e[0m"
+                      print "#{source}: " unless source == 'api'
+                      print prefix + line
+                      puts
 
-                    if have >= want
-                      Process.kill("TERM", pid)
+                      if have >= want
+                        Process.kill("TERM", pid)
+                      end
                     end
+                  rescue
                   end
                 end
 
