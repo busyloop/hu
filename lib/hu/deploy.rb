@@ -455,10 +455,8 @@ EOM
                 end
 
                 puts
-                puts "\e[0;1m# Observe startup\e[0m"
                 if h.app_feature.info(prod_app_name, 'preboot').dig('enabled')
                   puts <<EOF
-#
 # \e[0m\e]8;;https://devcenter.heroku.com/articles/preboot\007Preboot\e]8;;\007 is \e[32;1menabled\e[0m for \e[1m#{prod_app_name}\e[0m.
 #
 # #{NUMBERS[formation['quantity']] || formation['quantity']} new dyno#{formation['quantity'] == 1 ? '' : 's'} (\e[1m#{formation['size']}\e[0m) #{formation['quantity'] == 1 ? 'is' : 'are'} starting up.
@@ -466,29 +464,41 @@ EOM
 EOF
                 end
 
-                script = <<-EOS.strip_heredoc
-                :stream
-                :quiet
-                :failquiet
-                :nospinner
-                :return
-                heroku logs --tail -a #{prod_app_name} | grep -E "heroku\\[|app\\[api\\]"
-                EOS
-
-                sigint_handler = Proc.new do
-                  puts
-                  print TTY::Cursor.up + TTY::Cursor.clear_line + TTY::Cursor.show
-
-                  puts
-                  puts "\e[43m  \e[0m \e[0;32mRelease \e[1m#{release_tag}\e[0;32m is being launched on \e[1m#{prod_app_name}\e[0;32m\e[0m \e[43m  \e[0m"
-                  puts
-
-                  shutdown
-
-                  exit 0
-                end
-
-                run_each(script, parser: parser, sigint_handler: sigint_handler)
+#                 puts
+#                 puts "\e[0;1m# Observe startup\e[0m"
+#                 if h.app_feature.info(prod_app_name, 'preboot').dig('enabled')
+#                   puts <<EOF
+# #
+# # \e[0m\e]8;;https://devcenter.heroku.com/articles/preboot\007Preboot\e]8;;\007 is \e[32;1menabled\e[0m for \e[1m#{prod_app_name}\e[0m.
+# #
+# # #{NUMBERS[formation['quantity']] || formation['quantity']} new dyno#{formation['quantity'] == 1 ? '' : 's'} (\e[1m#{formation['size']}\e[0m) #{formation['quantity'] == 1 ? 'is' : 'are'} starting up.
+# # The old dynos will shut down within 3 minutes.
+# EOF
+#                 end
+#
+#                 script = <<-EOS.strip_heredoc
+#                 :stream
+#                 :quiet
+#                 :failquiet
+#                 :nospinner
+#                 :return
+#                 heroku logs --tail -a #{prod_app_name} | grep -E "heroku\\[|app\\[api\\]"
+#                 EOS
+#
+#                 sigint_handler = Proc.new do
+#                   puts
+#                   print TTY::Cursor.up + TTY::Cursor.clear_line + TTY::Cursor.show
+#
+#                   puts
+#                   puts "\e[43m  \e[0m \e[0;32mRelease \e[1m#{release_tag}\e[0;32m is being launched on \e[1m#{prod_app_name}\e[0;32m\e[0m \e[43m  \e[0m"
+#                   puts
+#
+#                   shutdown
+#
+#                   exit 0
+#                 end
+#
+#                 run_each(script, parser: parser, sigint_handler: sigint_handler)
 
                 puts
                 print"\a"; sleep 0.4
