@@ -377,12 +377,12 @@ EOM
 
           case choice
           when :DEPLOY
-            Fidget.prevent_sleep(:display, :sleep, :user) do
+            # Fidget.prevent_sleep(:display, :sleep, :user) do
               promote_to_production
-            end
+            # end
             anykey
           when :finish_release
-            Fidget.prevent_sleep(:display, :sleep, :user) do
+            # Fidget.prevent_sleep(:display, :sleep, :user) do
               if ci_clear?
                 old_editor = ENV['EDITOR']
                 old_git_editor = ENV['GIT_EDITOR']
@@ -462,6 +462,7 @@ EOM
 # #{NUMBERS[formation['quantity']] || formation['quantity']} new dyno#{formation['quantity'] == 1 ? '' : 's'} (\e[1m#{formation['size']}\e[0m) #{formation['quantity'] == 1 ? 'is' : 'are'} starting up.
 # The old dynos will shut down within 3 minutes.
 EOF
+
                 end
 
 #                 puts
@@ -500,7 +501,6 @@ EOF
 #
 #                 run_each(script, parser: parser, sigint_handler: sigint_handler)
 
-                puts
                 print"\a"; sleep 0.4
                 puts "\e[42m  \e[0m \e[0;32mRelease \e[1m#{release_tag}\e[0;32m has been deployed to \e[1m#{prod_app_name}\e[0;32m\e[0m \e[42m  \e[0m"
                 print"\a"; sleep 0.4
@@ -509,15 +509,15 @@ EOF
 
                 exit 0
               end
-            end
+            # end
           when :push_to_staging
-            Fidget.prevent_sleep(:display, :sleep, :user) do
+            # Fidget.prevent_sleep(:display, :sleep, :user) do
               run_each <<-EOS.strip_heredoc
                 :stream
                 git push origin develop
                 git push #{push_url} release/#{release_tag}:master -f
                 EOS
-            end
+            # end
             anykey
           when :abort_ask
             puts if delete_branch("release/#{release_tag}")
