@@ -318,7 +318,7 @@ EOM
           end
 
           if release_branch_exists && git_revisions[:release] == git_revisions[stag_app_name]
-            hyperlink = "\e]8;;#{app['web_url']}\007#{app['web_url']}\e]8;;\007"
+            hyperlink = "\e[1m#{app['web_url']}\e[0m"
 
             puts ' Phase 2/2 '.inverse + ' Your local ' + "release/#{release_tag}".bright + ' (formerly ' + 'develop'.bright + ') is live on ' + stag_app_name.to_s.bright + '.'
             puts
@@ -328,7 +328,7 @@ EOM
             puts '            If there are problems: Quit, delete the release branch and start fixing.'
             puts
           elsif git_revisions[prod_app_name] != git_revisions[stag_app_name] && !release_branch_exists && git_revisions[:release] != git_revisions[stag_app_name]
-            hyperlink = "\e]8;;#{app['web_url']}\007#{app['web_url']}\e]8;;\007"
+            hyperlink = "\e[1m#{app['web_url']}\e[0m"
 
             puts ' DEPLOY '.inverse + '  HEADS UP! This is the last chance to detect problems.'.bright
             puts '          The final version of ' + "release/#{release_tag}".bright + ' is staged.'
@@ -457,7 +457,7 @@ EOM
                 puts
                 if h.app_feature.info(prod_app_name, 'preboot').dig('enabled')
                   puts <<EOF
-# \e[0m\e]8;;https://devcenter.heroku.com/articles/preboot\007Preboot\e]8;;\007 is \e[32;1menabled\e[0m for \e[1m#{prod_app_name}\e[0m.
+# \e[0;1mPreboot\e[0m is \e[32;1menabled\e[0m for \e[1m#{prod_app_name}\e[0m.
 #
 # #{NUMBERS[formation['quantity']] || formation['quantity']} new dyno#{formation['quantity'] == 1 ? '' : 's'} (\e[1m#{formation['size']}\e[0m) #{formation['quantity'] == 1 ? 'is' : 'are'} starting up.
 # The old dynos will shut down within 3 minutes.
@@ -1257,7 +1257,6 @@ EOF
       def promote_to_production
         run_each <<-EOS.strip_heredoc
         :stream
-        :return
 
         # Promote staging to production
         heroku pipelines:promote -r heroku
