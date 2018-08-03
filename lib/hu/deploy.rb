@@ -461,6 +461,7 @@ EOM
 #
 # #{NUMBERS[formation['quantity']] || formation['quantity']} new dyno#{formation['quantity'] == 1 ? '' : 's'} (\e[1m#{formation['size']}\e[0m) #{formation['quantity'] == 1 ? 'is' : 'are'} starting up.
 # The old dynos will shut down within 3 minutes.
+
 EOF
 
                 end
