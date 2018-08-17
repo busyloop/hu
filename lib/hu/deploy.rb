@@ -581,7 +581,12 @@ EOF
       def ci_status(release_branch_exists=true)
         okit = Octokit::Client.new(access_token: ENV['HU_GITHUB_ACCESS_TOKEN'])
 
-        repo_name = @git.remotes['origin'].url.split(':')[1].gsub('.git', '')
+        origin_url = @git.remotes['origin'].url
+        if origin_url.downcase.start_with? 'http'
+          repo_name = origin_url.split('/')[3..-1].join('/').gsub('.git', '')
+        else
+          repo_name = origin_url.split(':')[1].gsub('.git', '')
+        end
 
         begin
           raw_status_develop = status_develop = okit.status(repo_name, @git.branches["origin/develop"].target_id)
