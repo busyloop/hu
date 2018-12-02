@@ -1,4 +1,4 @@
-# Heroku Utility [![Dependency Status](https://gemnasium.com/badges/github.com/busyloop/hu.svg)](https://gemnasium.com/github.com/busyloop/hu) [![Gem Version](https://badge.fury.io/rb/hu.svg)](https://badge.fury.io/rb/hu)
+# Heroku Utility [![Gem Version](https://badge.fury.io/rb/hu.svg)](https://badge.fury.io/rb/hu)
 
 A small utility to augment the toolbelt.
 
