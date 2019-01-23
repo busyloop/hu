@@ -505,9 +505,14 @@ EOF
 #                 run_each(script, parser: parser, sigint_handler: sigint_handler)
 
                 print"\a"; sleep 0.4
-                Notifier.notify(image: "#{__dir__}/../../assets/images/deploy.png",
-                                title: 'Deploy successful',
-                                message: "Release #{release_tag} has been deployed to #{prod_app_name}")
+
+                # disabled until we find a way to stop terminal-notifier
+                # from spamming messages to stdout.
+                #
+                # Notifier.notify(image: "#{__dir__}/../../assets/images/deploy.png",
+                #                 title: 'Deploy successful',
+                #                 message: "Release #{release_tag} has been deployed to #{prod_app_name}")
+
                 puts "\e[42m  \e[0m \e[0;32mRelease \e[1m#{release_tag}\e[0;32m has been deployed to \e[1m#{prod_app_name}\e[0;32m\e[0m \e[42m  \e[0m"
                 print"\a"; sleep 0.4
                 puts
