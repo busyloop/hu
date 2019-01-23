@@ -318,8 +318,9 @@ EOM
             puts
           end
 
+          staging_url = File.exist?('.hu/staging_url') ? File.read('.hu/staging_url').split("\n")[0] : app['web_url']
           if release_branch_exists && git_revisions[:release] == git_revisions[stag_app_name]
-            hyperlink = "\e[1m#{app['web_url']}\e[0m"
+            hyperlink = "\e[1m#{staging_url}\e[0m"
 
             puts ' Phase 2/2 '.inverse + ' Your local ' + "release/#{release_tag}".bright + ' (formerly ' + 'develop'.bright + ') is live on ' + stag_app_name.to_s.bright + '.'
             puts
@@ -1098,7 +1099,7 @@ EOF
         return false unless branch_exists? branch_name
         begin
           return false if TTY::Prompt.new.no?("Delete branch #{branch_name}?")
-        rescue TTY::Reader::InputInterrupt
+        rescue TTY::Reader::InputInterrupt, TTY::Prompt::ConversionError
           return false
         end
         run_each <<-EOS.strip_heredoc
