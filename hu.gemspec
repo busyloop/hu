@@ -47,4 +47,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'config'
   spec.add_dependency 'awesome_print'
   spec.add_dependency 'necromancer', '~> 0.4.0'
+  spec.add_dependency 'notifier'
+  spec.add_dependency 'terminal-notifier'
 end
