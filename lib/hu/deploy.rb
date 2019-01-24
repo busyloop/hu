@@ -56,7 +56,7 @@ module Hu
           require 'platform-api'
           print 'c'
           require 'version_sorter'
-          require 'notifier'
+          # require 'notifier'
           print 'h'
           require 'versionomy'
           print 'r'
