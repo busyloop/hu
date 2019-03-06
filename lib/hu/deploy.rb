@@ -995,6 +995,7 @@ EOF
                 rescue
                   next
                 end
+                sleep 0
                 @spinlock.synchronize do
                   next if @minispin_disable
                   print "\e[?25l"
