@@ -33,7 +33,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'versionomy', '~> 0.5.0'
   spec.add_dependency 'tty-prompt', '~> 0.13.2'
   spec.add_dependency 'tty-spinner', '= 0.3.0'
-  spec.add_dependency 'tty-table', '~> 0.9.0'
+  spec.add_dependency 'tty-table', '~> 0.10.0'
   spec.add_dependency 'fidget', '~> 0.0.6'
   spec.add_dependency 'octokit'
   spec.add_dependency 'tty-cursor'
