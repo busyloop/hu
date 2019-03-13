@@ -26,6 +26,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'optix', '~> 2.0.0'
   spec.add_dependency 'blackbox', '~> 4.0.2'
+  spec.add_dependency 'excon', '= 0.62.0'
   spec.add_dependency 'platform-api', '~> 2.1.0'
   spec.add_dependency 'powerbar', '>= 1.0.16'
   spec.add_dependency 'hashdiff', '~> 0.3.0'
