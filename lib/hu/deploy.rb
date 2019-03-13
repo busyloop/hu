@@ -922,6 +922,22 @@ EOF
         puts "       Please run 'heroku login'."
         puts
         exit 1
+      rescue Excon::Error::ServiceUnavailable
+        unbusy
+        puts "ERROR: Heroku Service Unavailable".color(:red)
+        puts
+        puts "       Heroku gave us a HTTP 503."
+        puts "       Please see https://status.heroku.com/"
+        puts
+        exit 1
+      rescue => e
+        unbusy
+        puts "ERROR: Unknown error while talking to Heroku".color(:red)
+        puts
+        puts "       Exception:"
+        puts
+        raise e
+        exit 1
       end
 
       def heroku_pipeline_details(app)
