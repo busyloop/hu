@@ -103,6 +103,8 @@ module Hu
           print "\e[0m\e[?25h"
         end
 
+        dp :discover
+
         begin
           @git = Rugged::Repository.discover('.')
         rescue Rugged::RepositoryError => e
@@ -126,6 +128,8 @@ module Hu
           exit 1
         end
 
+        dp 'detect git-flow'
+
         if @git.config['gitflow.branch.master'].nil?
           print TTY::Cursor.clear_line + TTY::Cursor.show
           puts
@@ -135,6 +139,8 @@ module Hu
           puts
           exit 1
         end
+
+        dp 'detect git-flow prefix'
 
         unless @git.config['gitflow.prefix.versiontag'].nil? ||
                @git.config['gitflow.prefix.versiontag'].empty?
@@ -149,11 +155,15 @@ module Hu
           exit 1
         end
 
+        dp 'detect git-remote'
+
         push_url = heroku_git_remote
         @@home_branch = current_branch_name
 
+        dp 'update working copy'
         wc_update = Thread.new { update_working_copy }
 
+        dp 'fetch heroku apps'
         app = heroku_app_by_git(push_url)
 
         if app.nil?
@@ -167,8 +177,10 @@ module Hu
           exit 1
         end
 
+        dp 'fetch pipelines'
         pipeline_name, stag_app_id, prod_app_id = heroku_pipeline_details(app)
 
+        dp 'validate app id'
         if app['id'] != stag_app_id
           print TTY::Cursor.clear_line + TTY::Cursor.show
           puts
@@ -186,8 +198,11 @@ module Hu
 
         stag_app_name = app['name']
         busy 'synchronizing', :dots
+
+        dp 'fetch prod app'
         prod_app_name = h.app.info(prod_app_id)['name']
 
+        dp 'wait for update'
         wc_update.join
 
         unless develop_can_be_merged_into_master?
@@ -199,6 +214,7 @@ module Hu
           exit 1
         end
 
+        dp 'fetch version'
         highest_version = find_highest_version_tag
         begin
           highest_versionomy = Versionomy.parse(highest_version)
@@ -206,20 +222,26 @@ module Hu
           highest_versionomy = Versionomy.parse('v0.0.0')
         end
 
+        dp 'fetch tags'
         all_tags = Set.new(@git.references.to_a('refs/tags/*').collect { |o| o.name[10..-1] })
 
         tiny_bump  = highest_versionomy.dup
         minor_bump = highest_versionomy.dup
         major_bump = highest_versionomy.dup
 
+        dp 'calc version A'
         loop do
           tiny_bump = tiny_bump.bump(:tiny)
           break unless all_tags.include? tiny_bump.to_s
         end
+
+        dp 'calc version B'
         loop do
           minor_bump = minor_bump.bump(:minor)
           break unless all_tags.include? minor_bump.to_s
         end
+
+        dp 'calc version C'
         loop do
           major_bump = major_bump.bump(:major)
           break unless all_tags.include? tiny_bump.to_s
@@ -238,6 +260,7 @@ module Hu
 
         clearscreen = true
         loop do
+          dp 'render'
           git_revisions = show_pipeline_status(pipeline_name, stag_app_name, prod_app_name, release_tag, clearscreen)
 
           if git_revisions[:develop] == `git rev-parse master`[0..5] && git_revisions[:develop] == git_revisions[prod_app_name] &&
@@ -1417,8 +1440,10 @@ EOF
       def dp(label, *args)
         return unless ENV['DEBUG']
         puts "---  DEBUG #{label}  ---"
-        ap(*args)
-        puts "--- ^#{label}^ ---"
+        if args.length > 0
+          ap(*args)
+          puts "--- ^#{label}^ ---"
+        end
       end
 
     end # /Class Deploy
