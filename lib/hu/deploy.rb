@@ -1411,12 +1411,14 @@ EOF
         return if @@shutting_down
         format ||= TTY::Formats::FORMATS.keys.sample
         options = { format: format, hide_cursor: true, error_mark: "\e[31;1m✖\e[0m", success_mark: "\e[32;1m✔\e[0m", clear: clear }
-        @@spinner = TTY::Spinner.new("\e[0;1m#{msg}#{msg.empty? ? '' : ' '}\e[0m\e[32;1m:spinner\e[0m", options)
-        @@spinner.start
+        unless ENV['SPINNER'] == '0'
+          @@spinner = TTY::Spinner.new("\e[0;1m#{msg}#{msg.empty? ? '' : ' '}\e[0m\e[32;1m:spinner\e[0m", options)
+          @@spinner.start
+        end
       end
 
       def unbusy
-        @@spinner&.stop
+        @@spinner&.stop unless ENV['SPINNER'] == '0'
         printf "\e[?25h"
       end
 
