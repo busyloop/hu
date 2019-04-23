@@ -593,7 +593,7 @@ EOF
         puts msg.color(:red)
         puts <<EOF
 
-       1. Go to \e]8;;https://github.com/settings/tokens\007https://github.com/settings/tokens\e]8;;\007
+       1. Go to \e[1mhttps://github.com/settings/tokens\e[0m
 
        2. Click on [Generate new token]
 
