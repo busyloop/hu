@@ -157,6 +157,21 @@ module Hu
           exit 1
         end
 
+        if @git.config['gitflow.prefix.release'] != 'release/'
+          print TTY::Cursor.clear_line + TTY::Cursor.show
+          puts
+          puts "ERROR: Your git-flow version seems to be suffering from a known bug.".color(:red)
+          puts
+          puts "Please run (copy/paste) all of the following commands to fix it:"
+          puts
+          puts 'git config gitflow.prefix.hotfix "hotfix/"'
+          puts 'git config gitflow.prefix.feature "feature/"'
+          puts 'git config gitflow.prefix.bugfix "bugfix/"'
+          puts 'git config gitflow.prefix.release "release/"'
+          puts 'git config gitflow.prefix.support "support/"'
+          exit 1
+        end
+
         dp 'detect git-flow prefix'
 
         unless @git.config['gitflow.prefix.versiontag'].nil? ||
