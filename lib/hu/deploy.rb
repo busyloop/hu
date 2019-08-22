@@ -145,7 +145,14 @@ module Hu
           puts
           puts "ERROR: This repository doesn't seem to be git-flow enabled.".color(:red)
           puts
-          puts "       Please run 'git flow init -d'"
+          puts "Please run (copy/paste) all of the following commands:"
+          puts
+          puts "git flow init -d"
+          puts 'git config gitflow.prefix.hotfix "hotfix/"'
+          puts 'git config gitflow.prefix.feature "feature/"'
+          puts 'git config gitflow.prefix.bugfix "bugfix/"'
+          puts 'git config gitflow.prefix.release "release/"'
+          puts 'git config gitflow.prefix.support "support/"'
           puts
           exit 1
         end
