@@ -118,6 +118,16 @@ module Hu
 
         Dir.chdir(@git.workdir)
 
+        unless branch_exists?("master")
+          print TTY::Cursor.clear_line + TTY::Cursor.show
+          puts
+          puts "ERROR: No 'master' branch.".color(:red)
+          puts
+          puts "       Please run 'git checkout master'"
+          puts
+          exit 1
+        end
+
         if @git.config['branch.master.remote'] != 'origin'
           print TTY::Cursor.clear_line + TTY::Cursor.show
           puts
