@@ -444,7 +444,7 @@ EOM
                 old_editor = ENV['EDITOR']
                 old_git_editor = ENV['GIT_EDITOR']
                 tf = Tempfile.new('hu-tag')
-                tf.write "#{release_tag}\n#{changelog}"
+                tf.write "#{release_tag}\n\n#{changelog}"
                 tf.close
                 ENV['EDITOR'] = ENV['GIT_EDITOR'] = "cp #{tf.path}"
                 env = {
