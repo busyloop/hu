@@ -1238,7 +1238,7 @@ EOF
         puts
 
         busy
-        heroku_apps = JSON.parse(`heroku pipelines:list --json`)
+        heroku_apps = JSON.parse(`heroku pipelines --json`)
         unbusy
 
         prompt = TTY::Prompt.new
