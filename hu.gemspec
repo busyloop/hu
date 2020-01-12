@@ -37,6 +37,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'tty-table', '~> 0.10.0'
   spec.add_dependency 'fidget', '~> 0.0.6'
   spec.add_dependency 'octokit'
+  spec.add_dependency 'faraday', '= 0.17.0'
   spec.add_dependency 'tty-cursor'
   spec.add_dependency 'rainbow'
   spec.add_dependency 'netrc', '= 0.11.0'

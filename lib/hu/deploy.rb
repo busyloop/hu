@@ -49,8 +49,8 @@ module Hu
           end
           require 'tty-cursor'
           print TTY::Cursor.hide + "\e[30;1ms"
-          require 'rainbow'
           print 'y'
+          require 'tty-prompt'
           require 'rainbow/ext/string'
           print 'n'
           require 'platform-api'
@@ -60,7 +60,7 @@ module Hu
           print 'h'
           require 'versionomy'
           print 'r'
-          require 'tty-prompt'
+          require 'rainbow'
           print 'o'
           require 'tty-table'
           require 'octokit'
@@ -435,10 +435,35 @@ EOM
           case choice
           when :DEPLOY
             # Fidget.prevent_sleep(:display, :sleep, :user) do
-              promote_to_production
+            promote_to_production
             # end
             anykey
           when :finish_release
+            if ENV['IGNORE_WEEKDAY'] != "1" && Date.today.wday == 5
+              puts
+              print TTY::Cursor.hide
+              (0..10).each do |i|
+                print "\e[10D         "
+                sleep 0.12 - i * 0.01
+                print "\e[10D"
+                print ' WARNING '.background(:red).color(:yellow).bright
+                sleep 0.12 - i * 0.01
+              end
+              puts TTY::Cursor.show
+              puts
+              puts "http://perrymitchell.net/article/why-friday-deployments-are-a-bad-idea/"
+              puts
+              begin
+                if TTY::Prompt.new.no?("Are you sure you want to deploy to production?")
+                  puts
+                  exit 0
+                end
+              rescue TTY::Reader::InputInterrupt
+                puts
+                exit 0
+              end
+            end
+
             # Fidget.prevent_sleep(:display, :sleep, :user) do
               if ci_clear?
                 old_editor = ENV['EDITOR']
