@@ -591,10 +591,9 @@ EOF
                 #                 title: 'Deploy successful',
                 #                 message: "Release #{release_tag} has been deployed to #{prod_app_name}")
 
-                [0.3,0.15,0.12,0.3,0.55].each { |i| print "\a"; sleep i }
+                [0.3,0.15,0.12,0.3].each { |i| print "\a"; sleep i }
                 puts "\e[42m  \e[0m \e[0;32mRelease \e[1m#{release_tag}\e[0;32m has been deployed to \e[1m#{prod_app_name}\e[0;32m\e[0m \e[42m  \e[0m\a"
-                sleep 0.35
-                puts "\a"
+                puts
 
                 exit 0
               end
