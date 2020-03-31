@@ -233,7 +233,7 @@ module Hu
               case e['role']
               when 'owner'
                 d['owner'] = e['user']['email']
-              when nil
+              when nil, 'member'
                 d['collaborators'] << e['user']['email']
               else
                 raise "Unknown collaborator role: #{e['role']}"
